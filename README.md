@@ -239,7 +239,20 @@ findings.
 ## Web UI
 
 `audit_web.bat` opens the browser to `http://127.0.0.1:8765/`. The
-UI exposes 12 scenarios:
+visual audit workflow dashboard is dynamically rendered from the real
+`AuditReport` returned by `/api/audit`; scenario labels and expected outcomes
+never determine the decision. It presents the patient and Dialogue Agent
+cards, a nine-step `ui_trace` workflow, decision/finding panels, DrugContext,
+rule catalog, and a collapsed developer JSON section.
+
+To open and automatically audit a preset, use
+`http://127.0.0.1:8765/?scenario=<scenario_id>` (for example,
+`?scenario=v421_dash_02_explicit_block`). The checked browser captures are at
+`docs/screenshots/pass.png`, `docs/screenshots/review.png`, and
+`docs/screenshots/block.png`; regenerate them with
+`python tests/capture_screenshots.py`.
+
+The UI exposes legacy scenarios A–P plus 15 dashboard scenarios:
 
 - **A** Legal new-schema input → PASS
 - **B** Metformin + eGFR=24 → BLOCK
