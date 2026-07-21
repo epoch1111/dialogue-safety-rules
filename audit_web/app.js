@@ -208,12 +208,16 @@
     const s = findScenario(els.scenarioSelect.value);
     if (!s) return;
     currentScenario = s;
-    els.patientTa.value = pretty(s.patient_state || {});
-    els.dialogueTa.value = pretty(s.dialogue_output || {});
+    // v4.2.1: patient_state + dialogue_output live inside audit_input.
+    const aid = s.audit_input || {};
+    const ps = aid.patient_state || {};
+    const do_out = aid.dialogue_output || {};
+    els.patientTa.value = pretty(ps);
+    els.dialogueTa.value = pretty(do_out);
     setText(els.scenarioSummary, s.summary || s.title || "");
     renderClinicalCase(s);
-    renderPatientState(s.patient_state || {});
-    renderDialogueOutput(s.dialogue_output || {});
+    renderPatientState(ps);
+    renderDialogueOutput(do_out);
   });
 
   function renderClinicalCase(scenario) {
