@@ -158,6 +158,13 @@ code, .mono {
 .clinical-case-panel {
   border-left: 3px solid var(--color-primary);
 }
+
+/* Make the HTML `hidden` attribute win over any later display:
+   declaration. Without this, an element with `display: flex` (or
+   grid, block, …) will still show even though we set `hidden=true`
+   from JavaScript when the scenario has no case_profile /
+   retrieved_evidence. */
+[hidden] { display: none !important; }
 .clinical-evidence-header {
   margin-top: 12px;
   padding-top: 10px;
