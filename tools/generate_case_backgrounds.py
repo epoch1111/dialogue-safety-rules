@@ -91,10 +91,13 @@ def _case_profile(patient_state: dict, reply_text: str,
     if not known_conditions and meds:
         # Use drug name as the "active condition" the patient is being
         # treated for. This is evidence, not invention.
-        known_conditions = [
-            m.get("drug_name") for m in meds
-            if m.get("drug_name") and m.get("status") == "active"
-        ]
+        for m in meds:
+            if not isinstance(m, dict):
+                continue
+            name = m.get("drug_name")
+            status = m.get("status")
+            if name and status == "active":
+                known_conditions.append(name)
     known_conditions = sorted(set(c for c in known_conditions if c)) or \
         ["（演示）"]
     if not known_conditions:

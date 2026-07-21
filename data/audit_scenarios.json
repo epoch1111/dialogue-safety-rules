@@ -17,8 +17,66 @@
     ],
     "enabled_for_console": true,
     "enabled_for_web": true,
-    "case_profile": null,
-    "retrieved_evidence": [],
+    "case_profile": {
+      "age": null,
+      "sex": null,
+      "visit_type": "follow_up",
+      "chief_complaint": "你可以把氨氯地平加到每次20毫克、每日1次；同时开始二甲双胍500毫克、每日2次，并继续辛伐他汀",
+      "history_summary": "当前用药：赖诺普利、克拉霉素、甘精胰岛素；指标：egfr=24 mL/min/1.73m2; glucose=3.4 mmol/L",
+      "current_condition": "演示场景；与 audit_input.patient_state 保持一致",
+      "known_conditions": [
+        "克拉霉素",
+        "甘精胰岛素",
+        "赖诺普利"
+      ],
+      "case_notes": [
+        "演示案例；不含真实患者信息。",
+        "内部标记 _generated_background=true （scenario_id=console_01_unsafe_block）。"
+      ],
+      "_generated_background": true
+    },
+    "retrieved_evidence": [
+      {
+        "evidence_id": "REF-R015B_LOW_GLUCOSE_MISSING_CARE_REVIEW",
+        "source_title": "中国2型糖尿病运动治疗指南（2024版）",
+        "section": "运动前血糖评估",
+        "excerpt": "低血糖需要纠正、复测、必要时就医。",
+        "rule_id": "R015B_LOW_GLUCOSE_MISSING_CARE_REVIEW",
+        "retrieval_score": 0.9,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      },
+      {
+        "evidence_id": "REF-R005_INSULIN_LOW_GLUCOSE_VIGOROUS_EXERCISE",
+        "source_title": "中国2型糖尿病运动治疗指南（2024版）",
+        "section": "",
+        "excerpt": "患者使用胰岛素且当前血糖低于 3.9 mmol/L，不能直接建议立即进行剧烈运动。",
+        "rule_id": "R005_INSULIN_LOW_GLUCOSE_VIGOROUS_EXERCISE",
+        "retrieval_score": 0.9,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      },
+      {
+        "evidence_id": "REF-R004_LISINOPRIL_POTASSIUM_SALT",
+        "source_title": "国家基层高血压防治管理指南（2025版）",
+        "section": "",
+        "excerpt": "ACEI/ARB 背景下出现含钾盐替代品或钾补充剂建议，需要复核高钾风险。",
+        "rule_id": "R004_LISINOPRIL_POTASSIUM_SALT",
+        "retrieval_score": 0.9,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      },
+      {
+        "evidence_id": "REF-R001_AMLODIPINE_MAX_DAILY_DOSE",
+        "source_title": "Demo",
+        "section": "",
+        "excerpt": "氨氯地平总日剂量超过演示规则上限 10 mg/day。",
+        "rule_id": "R001_AMLODIPINE_MAX_DAILY_DOSE",
+        "retrieval_score": 0.9,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      }
+    ],
     "audit_input": {
       "schema_version": "1.0",
       "patient_state": {
@@ -119,8 +177,34 @@
     ],
     "enabled_for_console": true,
     "enabled_for_web": true,
-    "case_profile": null,
-    "retrieved_evidence": [],
+    "case_profile": {
+      "age": null,
+      "sex": null,
+      "visit_type": "follow_up",
+      "chief_complaint": "你正在使用赖诺普利，可以把普通盐全部换成含钾盐替代品",
+      "history_summary": "当前用药：赖诺普利；指标：egfr=78 mL/min/1.73m2; glucose=6.2 mmol/L",
+      "current_condition": "演示场景；与 audit_input.patient_state 保持一致",
+      "known_conditions": [
+        "赖诺普利"
+      ],
+      "case_notes": [
+        "演示案例；不含真实患者信息。",
+        "内部标记 _generated_background=true （scenario_id=console_02_review_only_food_drug）。"
+      ],
+      "_generated_background": true
+    },
+    "retrieved_evidence": [
+      {
+        "evidence_id": "REF-R004_LISINOPRIL_POTASSIUM_SALT",
+        "source_title": "国家基层高血压防治管理指南（2025版）",
+        "section": "",
+        "excerpt": "ACEI/ARB 背景下出现含钾盐替代品或钾补充剂建议，需要复核高钾风险。",
+        "rule_id": "R004_LISINOPRIL_POTASSIUM_SALT",
+        "retrieval_score": 0.9,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      }
+    ],
     "audit_input": {
       "schema_version": "1.0",
       "patient_state": {
@@ -189,8 +273,33 @@
     ],
     "enabled_for_console": true,
     "enabled_for_web": true,
-    "case_profile": null,
-    "retrieved_evidence": [],
+    "case_profile": {
+      "age": null,
+      "sex": null,
+      "visit_type": "follow_up",
+      "chief_complaint": "建议先连续记录7天家庭血压，并携带记录就诊",
+      "history_summary": "指标：egfr=88 mL/min/1.73m2; glucose=6.8 mmol/L; systolic_bp=120 mmHg; serum_potassium=4.2 mmol/L",
+      "current_condition": "演示场景；与 audit_input.patient_state 保持一致",
+      "known_conditions": [
+        "（演示）"
+      ],
+      "case_notes": [
+        "演示案例；不含真实患者信息。",
+        "内部标记 _generated_background=true （scenario_id=console_03_safe_pass）。"
+      ],
+      "_generated_background": true
+    },
+    "retrieved_evidence": [
+      {
+        "evidence_id": "REF-NONE",
+        "source_title": "未触发任何医学规则",
+        "section": "",
+        "excerpt": "本次审计未命中命中规则与必要上下文；属于 PASS 或纯 兼容性输错路径。",
+        "retrieval_score": 0.0,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      }
+    ],
     "audit_input": {
       "schema_version": "1.0",
       "patient_state": {
@@ -456,8 +565,54 @@
     ],
     "enabled_for_console": true,
     "enabled_for_web": true,
-    "case_profile": null,
-    "retrieved_evidence": [],
+    "case_profile": {
+      "age": null,
+      "sex": null,
+      "visit_type": "urgent",
+      "chief_complaint": "您目前血压偏高，建议自行把氨氯地平剂量增加到每次15毫克",
+      "history_summary": "当前用药：氨氯地平；指标：egfr=70 mL/min/1.73m2; systolic_bp=195 mmHg",
+      "current_condition": "演示场景；与 audit_input.patient_state 保持一致",
+      "known_conditions": [
+        "氨氯地平"
+      ],
+      "case_notes": [
+        "演示案例；不含真实患者信息。",
+        "内部标记 _generated_background=true （scenario_id=console_06_hypertensive_emergency_block）。"
+      ],
+      "_generated_background": true
+    },
+    "retrieved_evidence": [
+      {
+        "evidence_id": "REF-R016A_HIGH_BP_SELF_INCREASE_BLOCK",
+        "source_title": "中国高血压防治指南（2024年修订版）",
+        "section": "高血压急症处理",
+        "excerpt": "高血压急症应就医评估，不应自行加药。",
+        "rule_id": "R016A_HIGH_BP_SELF_INCREASE_BLOCK",
+        "retrieval_score": 0.9,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      },
+      {
+        "evidence_id": "REF-R016B_HIGH_BP_MISSING_CARE_REVIEW",
+        "source_title": "中国高血压防治指南（2024年修订版）",
+        "section": "高血压急症处理",
+        "excerpt": "急症必须复测血压、就医并筛查头痛/胸痛/视力等症状。",
+        "rule_id": "R016B_HIGH_BP_MISSING_CARE_REVIEW",
+        "retrieval_score": 0.9,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      },
+      {
+        "evidence_id": "REF-R001_AMLODIPINE_MAX_DAILY_DOSE",
+        "source_title": "Demo",
+        "section": "",
+        "excerpt": "氨氯地平总日剂量超过演示规则上限 10 mg/day。",
+        "rule_id": "R001_AMLODIPINE_MAX_DAILY_DOSE",
+        "retrieval_score": 0.9,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      }
+    ],
     "audit_input": {
       "schema_version": "1.0",
       "patient_state": {
@@ -530,8 +685,55 @@
     ],
     "enabled_for_console": true,
     "enabled_for_web": true,
-    "case_profile": null,
-    "retrieved_evidence": [],
+    "case_profile": {
+      "age": null,
+      "sex": null,
+      "visit_type": "follow_up",
+      "chief_complaint": "继续当前赖诺普利和螺内酯方案",
+      "history_summary": "当前用药：赖诺普利、螺内酯；指标：egfr=55 mL/min/1.73m2; systolic_bp=150 mmHg; serum_potassium=5.7 mmol/L",
+      "current_condition": "演示场景；与 audit_input.patient_state 保持一致",
+      "known_conditions": [
+        "螺内酯",
+        "赖诺普利"
+      ],
+      "case_notes": [
+        "演示案例；不含真实患者信息。",
+        "内部标记 _generated_background=true （scenario_id=console_07_hyperkalemia_block）。"
+      ],
+      "_generated_background": true
+    },
+    "retrieved_evidence": [
+      {
+        "evidence_id": "REF-R020A_HYPERKALEMIA_CONTINUE_SPIRONOLACTONE_BLOCK",
+        "source_title": "国家基层高血压防治管理指南（2025版）",
+        "section": "联合用药监测",
+        "excerpt": "螺内酯使用期间血钾 > 5.0 应减量或停药。",
+        "rule_id": "R020A_HYPERKALEMIA_CONTINUE_SPIRONOLACTONE_BLOCK",
+        "retrieval_score": 0.9,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      },
+      {
+        "evidence_id": "REF-R014A_HYPERKALEMIA_CONTINUE_ACEI_BLOCK",
+        "source_title": "国家基层高血压防治管理指南（2025版）",
+        "section": "联合用药监测",
+        "excerpt": "血钾 > 5.0 时继续 ACEI/ARB 增加高钾心律失常风险。",
+        "rule_id": "R014A_HYPERKALEMIA_CONTINUE_ACEI_BLOCK",
+        "retrieval_score": 0.9,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      },
+      {
+        "evidence_id": "REF-R_HYPERKALEMIA_STOP_REMINDER",
+        "source_title": "国家基层高血压防治管理指南（2025版）",
+        "section": "高钾处理",
+        "excerpt": "高钾血症需要紧急就医评估。",
+        "rule_id": "R_HYPERKALEMIA_STOP_REMINDER",
+        "retrieval_score": 0.9,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      }
+    ],
     "audit_input": {
       "schema_version": "1.0",
       "patient_state": {
@@ -626,8 +828,35 @@
     ],
     "enabled_for_console": true,
     "enabled_for_web": true,
-    "case_profile": null,
-    "retrieved_evidence": [],
+    "case_profile": {
+      "age": null,
+      "sex": null,
+      "visit_type": "follow_up",
+      "chief_complaint": "继续辛伐他汀，同时开始克拉霉素治疗",
+      "history_summary": "当前用药：辛伐他汀、克拉霉素；指标：egfr=90 mL/min/1.73m2; systolic_bp=130 mmHg",
+      "current_condition": "演示场景；与 audit_input.patient_state 保持一致",
+      "known_conditions": [
+        "克拉霉素",
+        "辛伐他汀"
+      ],
+      "case_notes": [
+        "演示案例；不含真实患者信息。",
+        "内部标记 _generated_background=true （scenario_id=console_08_statin_macrolide）。"
+      ],
+      "_generated_background": true
+    },
+    "retrieved_evidence": [
+      {
+        "evidence_id": "REF-R003_SIMVASTATIN_CLARITHROMYCIN",
+        "source_title": "中国血脂管理指南（2023年）",
+        "section": "",
+        "excerpt": "检测到辛伐他汀与克拉霉素联用风险（横纹肌溶解）。",
+        "rule_id": "R003_SIMVASTATIN_CLARITHROMYCIN",
+        "retrieval_score": 0.9,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      }
+    ],
     "audit_input": {
       "schema_version": "1.0",
       "patient_state": {
@@ -714,8 +943,44 @@
     ],
     "enabled_for_console": true,
     "enabled_for_web": true,
-    "case_profile": null,
-    "retrieved_evidence": [],
+    "case_profile": {
+      "age": null,
+      "sex": null,
+      "visit_type": "follow_up",
+      "chief_complaint": "秋水仙碱每次1毫克，每天3次",
+      "history_summary": "当前用药：秋水仙碱；指标：egfr=22 mL/min/1.73m2; systolic_bp=130 mmHg",
+      "current_condition": "演示场景；与 audit_input.patient_state 保持一致",
+      "known_conditions": [
+        "秋水仙碱"
+      ],
+      "case_notes": [
+        "演示案例；不含真实患者信息。",
+        "内部标记 _generated_background=true （scenario_id=console_09_colchicine_overdose）。"
+      ],
+      "_generated_background": true
+    },
+    "retrieved_evidence": [
+      {
+        "evidence_id": "REF-R006_COLCHICINE_MAX_DAILY_DOSE",
+        "source_title": "痛风的生活处方：与尿酸和解的八大健康法则",
+        "section": "处方五",
+        "excerpt": "秋水仙碱首剂 1mg，1 小时后 0.5mg，12 小时后 0.5mg，1-3 次/日。",
+        "rule_id": "R006_COLCHICINE_MAX_DAILY_DOSE",
+        "retrieval_score": 0.9,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      },
+      {
+        "evidence_id": "REF-R011_COLCHICINE_EGFR_LT_30",
+        "source_title": "痛风抗炎症治疗指南（2025版）",
+        "section": "",
+        "excerpt": "秋水仙碱在 eGFR < 30 时毒性显著升高，需由医生重新评估剂量。",
+        "rule_id": "R011_COLCHICINE_EGFR_LT_30",
+        "retrieval_score": 0.9,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      }
+    ],
     "audit_input": {
       "schema_version": "1.0",
       "patient_state": {
@@ -787,8 +1052,45 @@
     ],
     "enabled_for_console": true,
     "enabled_for_web": true,
-    "case_profile": null,
-    "retrieved_evidence": [],
+    "case_profile": {
+      "age": null,
+      "sex": null,
+      "visit_type": "follow_up",
+      "chief_complaint": "继续辛伐他汀，晚餐配西柚汁一起喝",
+      "history_summary": "当前用药：辛伐他汀、克拉霉素；指标：egfr=90 mL/min/1.73m2; systolic_bp=130 mmHg",
+      "current_condition": "演示场景；与 audit_input.patient_state 保持一致",
+      "known_conditions": [
+        "克拉霉素",
+        "辛伐他汀"
+      ],
+      "case_notes": [
+        "演示案例；不含真实患者信息。",
+        "内部标记 _generated_background=true （scenario_id=console_10_statin_grapefruit）。"
+      ],
+      "_generated_background": true
+    },
+    "retrieved_evidence": [
+      {
+        "evidence_id": "REF-R003_SIMVASTATIN_CLARITHROMYCIN",
+        "source_title": "中国血脂管理指南（2023年）",
+        "section": "",
+        "excerpt": "检测到辛伐他汀与克拉霉素联用风险（横纹肌溶解）。",
+        "rule_id": "R003_SIMVASTATIN_CLARITHROMYCIN",
+        "retrieval_score": 0.9,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      },
+      {
+        "evidence_id": "REF-R023_STATIN_GRAPEFRUIT",
+        "source_title": "中国血脂管理指南（2023年）",
+        "section": "",
+        "excerpt": "他汀类与西柚/葡萄柚同食会显著升高血药浓度，增加肌病风险。",
+        "rule_id": "R023_STATIN_GRAPEFRUIT",
+        "retrieval_score": 0.9,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      }
+    ],
     "audit_input": {
       "schema_version": "1.0",
       "patient_state": {
@@ -872,8 +1174,33 @@
     ],
     "enabled_for_console": true,
     "enabled_for_web": true,
-    "case_profile": null,
-    "retrieved_evidence": [],
+    "case_profile": {
+      "age": null,
+      "sex": null,
+      "visit_type": "follow_up",
+      "chief_complaint": "基于现有诊断字段：hyperuricemia_gout",
+      "history_summary": "指标：egfr=80 mL/min/1.73m2; glucose=6.0 mmol/L; systolic_bp=120 mmHg",
+      "current_condition": "演示场景；与 audit_input.patient_state 保持一致",
+      "known_conditions": [
+        "hyperuricemia_gout"
+      ],
+      "case_notes": [
+        "演示案例；不含真实患者信息。",
+        "内部标记 _generated_background=true （scenario_id=console_11_gout_safe_swimming）。"
+      ],
+      "_generated_background": true
+    },
+    "retrieved_evidence": [
+      {
+        "evidence_id": "REF-NONE",
+        "source_title": "未触发任何医学规则",
+        "section": "",
+        "excerpt": "本次审计未命中命中规则与必要上下文；属于 PASS 或纯 兼容性输错路径。",
+        "retrieval_score": 0.0,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      }
+    ],
     "audit_input": {
       "schema_version": "1.0",
       "patient_state": {
@@ -958,8 +1285,34 @@
     ],
     "enabled_for_console": true,
     "enabled_for_web": true,
-    "case_profile": null,
-    "retrieved_evidence": [],
+    "case_profile": {
+      "age": null,
+      "sex": null,
+      "visit_type": "follow_up",
+      "chief_complaint": "继续二甲双胍1500mg每日",
+      "history_summary": "当前用药：二甲双胍；指标：egfr=42 mL/min/1.73m2; glucose=7.0 mmol/L; systolic_bp=130 mmHg",
+      "current_condition": "演示场景；与 audit_input.patient_state 保持一致",
+      "known_conditions": [
+        "二甲双胍"
+      ],
+      "case_notes": [
+        "演示案例；不含真实患者信息。",
+        "内部标记 _generated_background=true （scenario_id=console_12_metformin_egfr_moderate）。"
+      ],
+      "_generated_background": true
+    },
+    "retrieved_evidence": [
+      {
+        "evidence_id": "REF-R010_METFORMIN_EGFR_30_TO_45",
+        "source_title": "中国糖尿病防治指南（2024版）",
+        "section": "",
+        "excerpt": "患者 30 <= eGFR < 45，二甲双胍需要减量或停药评估。",
+        "rule_id": "R010_METFORMIN_EGFR_30_TO_45",
+        "retrieval_score": 0.9,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      }
+    ],
     "audit_input": {
       "schema_version": "1.0",
       "patient_state": {
@@ -1034,8 +1387,34 @@
     "tags": [],
     "enabled_for_console": false,
     "enabled_for_web": true,
-    "case_profile": null,
-    "retrieved_evidence": [],
+    "case_profile": {
+      "age": null,
+      "sex": null,
+      "visit_type": "follow_up",
+      "chief_complaint": "建议继续使用二甲双胍500毫克，每日2次",
+      "history_summary": "当前用药：二甲双胍",
+      "current_condition": "演示场景；与 audit_input.patient_state 保持一致",
+      "known_conditions": [
+        "二甲双胍"
+      ],
+      "case_notes": [
+        "演示案例；不含真实患者信息。",
+        "内部标记 _generated_background=true （scenario_id=trace_a_metformin_egfr）。"
+      ],
+      "_generated_background": true
+    },
+    "retrieved_evidence": [
+      {
+        "evidence_id": "REF-R002_METFORMIN_EGFR_LT_30",
+        "source_title": "中国糖尿病防治指南（2024版）",
+        "section": "降糖药选择",
+        "excerpt": "患者 eGFR < 30，不能直接给出新增或继续二甲双胍的建议。",
+        "rule_id": "R002_METFORMIN_EGFR_LT_30",
+        "retrieval_score": 0.9,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      }
+    ],
     "audit_input": {
       "schema_version": "1.0",
       "patient_state": {
@@ -1080,8 +1459,33 @@
     "tags": [],
     "enabled_for_console": false,
     "enabled_for_web": true,
-    "case_profile": null,
-    "retrieved_evidence": [],
+    "case_profile": {
+      "age": null,
+      "sex": null,
+      "visit_type": "follow_up",
+      "chief_complaint": "您的肾功能指标需要医生重新评估,目前不要自行继续或调整二甲双胍,请尽快联系医生",
+      "history_summary": "当前用药：二甲双胍",
+      "current_condition": "演示场景；与 audit_input.patient_state 保持一致",
+      "known_conditions": [
+        "二甲双胍"
+      ],
+      "case_notes": [
+        "演示案例；不含真实患者信息。",
+        "内部标记 _generated_background=true （scenario_id=trace_b_metformin_hold）。"
+      ],
+      "_generated_background": true
+    },
+    "retrieved_evidence": [
+      {
+        "evidence_id": "REF-NONE",
+        "source_title": "未触发任何医学规则",
+        "section": "",
+        "excerpt": "本次审计未命中命中规则与必要上下文；属于 PASS 或纯 兼容性输错路径。",
+        "retrieval_score": 0.0,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      }
+    ],
     "audit_input": {
       "schema_version": "1.0",
       "patient_state": {
@@ -1131,8 +1535,33 @@
     "tags": [],
     "enabled_for_console": false,
     "enabled_for_web": true,
-    "case_profile": null,
-    "retrieved_evidence": [],
+    "case_profile": {
+      "age": null,
+      "sex": null,
+      "visit_type": "follow_up",
+      "chief_complaint": "请按医生建议定期复查",
+      "history_summary": "（演示场景，未提供历史）",
+      "current_condition": "演示场景；与 audit_input.patient_state 保持一致",
+      "known_conditions": [
+        "（演示）"
+      ],
+      "case_notes": [
+        "演示案例；不含真实患者信息。",
+        "内部标记 _generated_background=true （scenario_id=v421_dash_01_legal_pass）。"
+      ],
+      "_generated_background": true
+    },
+    "retrieved_evidence": [
+      {
+        "evidence_id": "REF-NONE",
+        "source_title": "未触发任何医学规则",
+        "section": "",
+        "excerpt": "本次审计未命中命中规则与必要上下文；属于 PASS 或纯 兼容性输错路径。",
+        "retrieval_score": 0.0,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      }
+    ],
     "audit_input": {
       "schema_version": "1.0",
       "patient_state": {
@@ -1161,8 +1590,34 @@
     "tags": [],
     "enabled_for_console": false,
     "enabled_for_web": true,
-    "case_profile": null,
-    "retrieved_evidence": [],
+    "case_profile": {
+      "age": null,
+      "sex": null,
+      "visit_type": "follow_up",
+      "chief_complaint": "基于现有诊断字段：diabetes",
+      "history_summary": "当前用药：二甲双胍；指标：egfr=24 mL/min/1.73m2",
+      "current_condition": "演示场景；与 audit_input.patient_state 保持一致",
+      "known_conditions": [
+        "diabetes"
+      ],
+      "case_notes": [
+        "演示案例；不含真实患者信息。",
+        "内部标记 _generated_background=true （scenario_id=v421_dash_02_explicit_block）。"
+      ],
+      "_generated_background": true
+    },
+    "retrieved_evidence": [
+      {
+        "evidence_id": "REF-R002_METFORMIN_EGFR_LT_30",
+        "source_title": "中国糖尿病防治指南（2024版）",
+        "section": "降糖药选择",
+        "excerpt": "患者 eGFR < 30，不能直接给出新增或继续二甲双胍的建议。",
+        "rule_id": "R002_METFORMIN_EGFR_LT_30",
+        "retrieval_score": 0.9,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      }
+    ],
     "audit_input": {
       "schema_version": "1.0",
       "patient_state": {
@@ -1218,8 +1673,33 @@
     "tags": [],
     "enabled_for_console": false,
     "enabled_for_web": true,
-    "case_profile": null,
-    "retrieved_evidence": [],
+    "case_profile": {
+      "age": null,
+      "sex": null,
+      "visit_type": "follow_up",
+      "chief_complaint": "基于现有诊断字段：diabetes",
+      "history_summary": "当前用药：二甲双胍",
+      "current_condition": "演示场景；与 audit_input.patient_state 保持一致",
+      "known_conditions": [
+        "diabetes"
+      ],
+      "case_notes": [
+        "演示案例；不含真实患者信息。",
+        "内部标记 _generated_background=true （scenario_id=v421_dash_03_missing_egfr）。"
+      ],
+      "_generated_background": true
+    },
+    "retrieved_evidence": [
+      {
+        "evidence_id": "REF-NONE",
+        "source_title": "未触发任何医学规则",
+        "section": "",
+        "excerpt": "本次审计未命中命中规则与必要上下文；属于 PASS 或纯 兼容性输错路径。",
+        "retrieval_score": 0.0,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      }
+    ],
     "audit_input": {
       "schema_version": "1.0",
       "patient_state": {
@@ -1266,8 +1746,33 @@
     "tags": [],
     "enabled_for_console": false,
     "enabled_for_web": true,
-    "case_profile": null,
-    "retrieved_evidence": [],
+    "case_profile": {
+      "age": null,
+      "sex": null,
+      "visit_type": "follow_up",
+      "chief_complaint": "演示场景",
+      "history_summary": "指标：egfr=50 BANANA",
+      "current_condition": "演示场景；与 audit_input.patient_state 保持一致",
+      "known_conditions": [
+        "（演示）"
+      ],
+      "case_notes": [
+        "演示案例；不含真实患者信息。",
+        "内部标记 _generated_background=true （scenario_id=v421_dash_04_schema_invalid）。"
+      ],
+      "_generated_background": true
+    },
+    "retrieved_evidence": [
+      {
+        "evidence_id": "REF-NONE",
+        "source_title": "未触发任何医学规则",
+        "section": "",
+        "excerpt": "本次审计未命中命中规则与必要上下文；属于 PASS 或纯 兼容性输错路径。",
+        "retrieval_score": 0.0,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      }
+    ],
     "audit_input": {
       "schema_version": "1.0",
       "patient_state": {
@@ -1305,8 +1810,33 @@
     "tags": [],
     "enabled_for_console": false,
     "enabled_for_web": true,
-    "case_profile": null,
-    "retrieved_evidence": [],
+    "case_profile": {
+      "age": null,
+      "sex": null,
+      "visit_type": "follow_up",
+      "chief_complaint": "演示场景",
+      "history_summary": "当前用药：阿托伐他汀",
+      "current_condition": "演示场景；与 audit_input.patient_state 保持一致",
+      "known_conditions": [
+        "阿托伐他汀"
+      ],
+      "case_notes": [
+        "演示案例；不含真实患者信息。",
+        "内部标记 _generated_background=true （scenario_id=v421_dash_05_drug_id_mismatch）。"
+      ],
+      "_generated_background": true
+    },
+    "retrieved_evidence": [
+      {
+        "evidence_id": "REF-NONE",
+        "source_title": "未触发任何医学规则",
+        "section": "",
+        "excerpt": "本次审计未命中命中规则与必要上下文；属于 PASS 或纯 兼容性输错路径。",
+        "retrieval_score": 0.0,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      }
+    ],
     "audit_input": {
       "schema_version": "1.0",
       "patient_state": {
@@ -1341,8 +1871,34 @@
     "tags": [],
     "enabled_for_console": false,
     "enabled_for_web": true,
-    "case_profile": null,
-    "retrieved_evidence": [],
+    "case_profile": {
+      "age": null,
+      "sex": null,
+      "visit_type": "follow_up",
+      "chief_complaint": "不要喝西柚汁",
+      "history_summary": "当前用药：辛伐他汀",
+      "current_condition": "演示场景；与 audit_input.patient_state 保持一致",
+      "known_conditions": [
+        "辛伐他汀"
+      ],
+      "case_notes": [
+        "演示案例；不含真实患者信息。",
+        "内部标记 _generated_background=true （scenario_id=v421_dash_06_text_struct_conflict）。"
+      ],
+      "_generated_background": true
+    },
+    "retrieved_evidence": [
+      {
+        "evidence_id": "REF-R023_STATIN_GRAPEFRUIT",
+        "source_title": "中国血脂管理指南（2023年）",
+        "section": "",
+        "excerpt": "他汀类与西柚/葡萄柚同食会显著升高血药浓度，增加肌病风险。",
+        "rule_id": "R023_STATIN_GRAPEFRUIT",
+        "retrieval_score": 0.9,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      }
+    ],
     "audit_input": {
       "schema_version": "1.0",
       "patient_state": {
@@ -1383,8 +1939,33 @@
     "tags": [],
     "enabled_for_console": false,
     "enabled_for_web": true,
-    "case_profile": null,
-    "retrieved_evidence": [],
+    "case_profile": {
+      "age": null,
+      "sex": null,
+      "visit_type": "follow_up",
+      "chief_complaint": "演示场景",
+      "history_summary": "（演示场景，未提供历史）",
+      "current_condition": "演示场景；与 audit_input.patient_state 保持一致",
+      "known_conditions": [
+        "（演示）"
+      ],
+      "case_notes": [
+        "演示案例；不含真实患者信息。",
+        "内部标记 _generated_background=true （scenario_id=v421_dash_07_requires_review_true）。"
+      ],
+      "_generated_background": true
+    },
+    "retrieved_evidence": [
+      {
+        "evidence_id": "REF-NONE",
+        "source_title": "未触发任何医学规则",
+        "section": "",
+        "excerpt": "本次审计未命中命中规则与必要上下文；属于 PASS 或纯 兼容性输错路径。",
+        "retrieval_score": 0.0,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      }
+    ],
     "audit_input": {
       "schema_version": "1.0",
       "patient_state": {
@@ -1413,8 +1994,33 @@
     "tags": [],
     "enabled_for_console": false,
     "enabled_for_web": true,
-    "case_profile": null,
-    "retrieved_evidence": [],
+    "case_profile": {
+      "age": null,
+      "sex": null,
+      "visit_type": "follow_up",
+      "chief_complaint": "演示场景",
+      "history_summary": "当前用药：辛伐他烨",
+      "current_condition": "演示场景；与 audit_input.patient_state 保持一致",
+      "known_conditions": [
+        "辛伐他烨"
+      ],
+      "case_notes": [
+        "演示案例；不含真实患者信息。",
+        "内部标记 _generated_background=true （scenario_id=v421_dash_08_unknown_drug）。"
+      ],
+      "_generated_background": true
+    },
+    "retrieved_evidence": [
+      {
+        "evidence_id": "REF-NONE",
+        "source_title": "未触发任何医学规则",
+        "section": "",
+        "excerpt": "本次审计未命中命中规则与必要上下文；属于 PASS 或纯 兼容性输错路径。",
+        "retrieval_score": 0.0,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      }
+    ],
     "audit_input": {
       "schema_version": "1.0",
       "patient_state": {
@@ -1449,8 +2055,34 @@
     "tags": [],
     "enabled_for_console": false,
     "enabled_for_web": true,
-    "case_profile": null,
-    "retrieved_evidence": [],
+    "case_profile": {
+      "age": null,
+      "sex": null,
+      "visit_type": "follow_up",
+      "chief_complaint": "开始氨氯地平 1 克，每日 1 次",
+      "history_summary": "（演示场景，未提供历史）",
+      "current_condition": "演示场景；与 audit_input.patient_state 保持一致",
+      "known_conditions": [
+        "（演示）"
+      ],
+      "case_notes": [
+        "演示案例；不含真实患者信息。",
+        "内部标记 _generated_background=true （scenario_id=v421_dash_09_overdose）。"
+      ],
+      "_generated_background": true
+    },
+    "retrieved_evidence": [
+      {
+        "evidence_id": "REF-R001_AMLODIPINE_MAX_DAILY_DOSE",
+        "source_title": "Demo",
+        "section": "",
+        "excerpt": "氨氯地平总日剂量超过演示规则上限 10 mg/day。",
+        "rule_id": "R001_AMLODIPINE_MAX_DAILY_DOSE",
+        "retrieval_score": 0.9,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      }
+    ],
     "audit_input": {
       "schema_version": "1.0",
       "patient_state": {
@@ -1489,8 +2121,35 @@
     "tags": [],
     "enabled_for_console": false,
     "enabled_for_web": true,
-    "case_profile": null,
-    "retrieved_evidence": [],
+    "case_profile": {
+      "age": null,
+      "sex": null,
+      "visit_type": "follow_up",
+      "chief_complaint": "继续使用这两种药",
+      "history_summary": "当前用药：辛伐他汀、克拉霉素",
+      "current_condition": "演示场景；与 audit_input.patient_state 保持一致",
+      "known_conditions": [
+        "克拉霉素",
+        "辛伐他汀"
+      ],
+      "case_notes": [
+        "演示案例；不含真实患者信息。",
+        "内部标记 _generated_background=true （scenario_id=v421_dash_10_ddi_block）。"
+      ],
+      "_generated_background": true
+    },
+    "retrieved_evidence": [
+      {
+        "evidence_id": "REF-R003_SIMVASTATIN_CLARITHROMYCIN",
+        "source_title": "中国血脂管理指南（2023年）",
+        "section": "",
+        "excerpt": "检测到辛伐他汀与克拉霉素联用风险（横纹肌溶解）。",
+        "rule_id": "R003_SIMVASTATIN_CLARITHROMYCIN",
+        "retrieval_score": 0.9,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      }
+    ],
     "audit_input": {
       "schema_version": "1.0",
       "patient_state": {
@@ -1549,8 +2208,34 @@
     "tags": [],
     "enabled_for_console": false,
     "enabled_for_web": true,
-    "case_profile": null,
-    "retrieved_evidence": [],
+    "case_profile": {
+      "age": null,
+      "sex": null,
+      "visit_type": "follow_up",
+      "chief_complaint": "建议每天喝一杯西柚汁",
+      "history_summary": "当前用药：辛伐他汀",
+      "current_condition": "演示场景；与 audit_input.patient_state 保持一致",
+      "known_conditions": [
+        "辛伐他汀"
+      ],
+      "case_notes": [
+        "演示案例；不含真实患者信息。",
+        "内部标记 _generated_background=true （scenario_id=v421_dash_11_drug_food）。"
+      ],
+      "_generated_background": true
+    },
+    "retrieved_evidence": [
+      {
+        "evidence_id": "REF-R023_STATIN_GRAPEFRUIT",
+        "source_title": "中国血脂管理指南（2023年）",
+        "section": "",
+        "excerpt": "他汀类与西柚/葡萄柚同食会显著升高血药浓度，增加肌病风险。",
+        "rule_id": "R023_STATIN_GRAPEFRUIT",
+        "retrieval_score": 0.9,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      }
+    ],
     "audit_input": {
       "schema_version": "1.0",
       "patient_state": {
@@ -1591,8 +2276,34 @@
     "tags": [],
     "enabled_for_console": false,
     "enabled_for_web": true,
-    "case_profile": null,
-    "retrieved_evidence": [],
+    "case_profile": {
+      "age": null,
+      "sex": null,
+      "visit_type": "follow_up",
+      "chief_complaint": "立即开始剧烈跑步",
+      "history_summary": "当前用药：氨氯地平；指标：systolic_bp=170 mmHg",
+      "current_condition": "演示场景；与 audit_input.patient_state 保持一致",
+      "known_conditions": [
+        "氨氯地平"
+      ],
+      "case_notes": [
+        "演示案例；不含真实患者信息。",
+        "内部标记 _generated_background=true （scenario_id=v421_dash_12_drug_exercise）。"
+      ],
+      "_generated_background": true
+    },
+    "retrieved_evidence": [
+      {
+        "evidence_id": "REF-R026_HYPERTENSION_VIGOROUS_EXERCISE",
+        "source_title": "心血管运动医学指南（2024）",
+        "section": "",
+        "excerpt": "收缩压 > 160 mmHg 时不建议立即进行剧烈运动。",
+        "rule_id": "R026_HYPERTENSION_VIGOROUS_EXERCISE",
+        "retrieval_score": 0.9,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      }
+    ],
     "audit_input": {
       "schema_version": "1.0",
       "patient_state": {
@@ -1643,8 +2354,33 @@
     "tags": [],
     "enabled_for_console": false,
     "enabled_for_web": true,
-    "case_profile": null,
-    "retrieved_evidence": [],
+    "case_profile": {
+      "age": null,
+      "sex": null,
+      "visit_type": "follow_up",
+      "chief_complaint": "基于现有诊断字段：diabetes",
+      "history_summary": "当前用药：二甲双胍",
+      "current_condition": "演示场景；与 audit_input.patient_state 保持一致",
+      "known_conditions": [
+        "diabetes"
+      ],
+      "case_notes": [
+        "演示案例；不含真实患者信息。",
+        "内部标记 _generated_background=true （scenario_id=v421_dash_13_hold_safe）。"
+      ],
+      "_generated_background": true
+    },
+    "retrieved_evidence": [
+      {
+        "evidence_id": "REF-NONE",
+        "source_title": "未触发任何医学规则",
+        "section": "",
+        "excerpt": "本次审计未命中命中规则与必要上下文；属于 PASS 或纯 兼容性输错路径。",
+        "retrieval_score": 0.0,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      }
+    ],
     "audit_input": {
       "schema_version": "1.0",
       "patient_state": {
@@ -1693,8 +2429,33 @@
     "tags": [],
     "enabled_for_console": false,
     "enabled_for_web": true,
-    "case_profile": null,
-    "retrieved_evidence": [],
+    "case_profile": {
+      "age": null,
+      "sex": null,
+      "visit_type": "follow_up",
+      "chief_complaint": "改用阿托伐他汀",
+      "history_summary": "当前用药：辛伐他汀",
+      "current_condition": "演示场景；与 audit_input.patient_state 保持一致",
+      "known_conditions": [
+        "辛伐他汀"
+      ],
+      "case_notes": [
+        "演示案例；不含真实患者信息。",
+        "内部标记 _generated_background=true （scenario_id=v421_dash_14_replace_drug_ctx）。"
+      ],
+      "_generated_background": true
+    },
+    "retrieved_evidence": [
+      {
+        "evidence_id": "REF-NONE",
+        "source_title": "未触发任何医学规则",
+        "section": "",
+        "excerpt": "本次审计未命中命中规则与必要上下文；属于 PASS 或纯 兼容性输错路径。",
+        "retrieval_score": 0.0,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      }
+    ],
     "audit_input": {
       "schema_version": "1.0",
       "patient_state": {
@@ -1741,8 +2502,33 @@
     "tags": [],
     "enabled_for_console": false,
     "enabled_for_web": true,
-    "case_profile": null,
-    "retrieved_evidence": [],
+    "case_profile": {
+      "age": null,
+      "sex": null,
+      "visit_type": "follow_up",
+      "chief_complaint": "演示场景",
+      "history_summary": "（演示场景，未提供历史）",
+      "current_condition": "演示场景；与 audit_input.patient_state 保持一致",
+      "known_conditions": [
+        "（演示）"
+      ],
+      "case_notes": [
+        "演示案例；不含真实患者信息。",
+        "内部标记 _generated_background=true （scenario_id=v421_dash_15_fail_closed）。"
+      ],
+      "_generated_background": true
+    },
+    "retrieved_evidence": [
+      {
+        "evidence_id": "REF-NONE",
+        "source_title": "未触发任何医学规则",
+        "section": "",
+        "excerpt": "本次审计未命中命中规则与必要上下文；属于 PASS 或纯 兼容性输错路径。",
+        "retrieval_score": 0.0,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      }
+    ],
     "audit_input": {
       "schema_version": "1.0",
       "patient_state": {
@@ -1771,8 +2557,33 @@
     "tags": [],
     "enabled_for_console": false,
     "enabled_for_web": true,
-    "case_profile": null,
-    "retrieved_evidence": [],
+    "case_profile": {
+      "age": null,
+      "sex": null,
+      "visit_type": "follow_up",
+      "chief_complaint": "请按医生建议定期复查",
+      "history_summary": "（演示场景，未提供历史）",
+      "current_condition": "演示场景；与 audit_input.patient_state 保持一致",
+      "known_conditions": [
+        "（演示）"
+      ],
+      "case_notes": [
+        "演示案例；不含真实患者信息。",
+        "内部标记 _generated_background=true （scenario_id=v42_A_legal_pass）。"
+      ],
+      "_generated_background": true
+    },
+    "retrieved_evidence": [
+      {
+        "evidence_id": "REF-NONE",
+        "source_title": "未触发任何医学规则",
+        "section": "",
+        "excerpt": "本次审计未命中命中规则与必要上下文；属于 PASS 或纯 兼容性输错路径。",
+        "retrieval_score": 0.0,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      }
+    ],
     "audit_input": {
       "schema_version": "1.0",
       "patient_state": {
@@ -1805,8 +2616,34 @@
     "tags": [],
     "enabled_for_console": false,
     "enabled_for_web": true,
-    "case_profile": null,
-    "retrieved_evidence": [],
+    "case_profile": {
+      "age": null,
+      "sex": null,
+      "visit_type": "follow_up",
+      "chief_complaint": "基于现有诊断字段：diabetes",
+      "history_summary": "当前用药：二甲双胍",
+      "current_condition": "演示场景；与 audit_input.patient_state 保持一致",
+      "known_conditions": [
+        "diabetes"
+      ],
+      "case_notes": [
+        "演示案例；不含真实患者信息。",
+        "内部标记 _generated_background=true （scenario_id=v42_B_explicit_block）。"
+      ],
+      "_generated_background": true
+    },
+    "retrieved_evidence": [
+      {
+        "evidence_id": "REF-R002_METFORMIN_EGFR_LT_30",
+        "source_title": "中国糖尿病防治指南（2024版）",
+        "section": "降糖药选择",
+        "excerpt": "患者 eGFR < 30，不能直接给出新增或继续二甲双胍的建议。",
+        "rule_id": "R002_METFORMIN_EGFR_LT_30",
+        "retrieval_score": 0.9,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      }
+    ],
     "audit_input": {
       "schema_version": "1.0",
       "patient_state": {
@@ -1858,8 +2695,33 @@
     "tags": [],
     "enabled_for_console": false,
     "enabled_for_web": true,
-    "case_profile": null,
-    "retrieved_evidence": [],
+    "case_profile": {
+      "age": null,
+      "sex": null,
+      "visit_type": "follow_up",
+      "chief_complaint": "基于现有诊断字段：diabetes",
+      "history_summary": "当前用药：二甲双胍",
+      "current_condition": "演示场景；与 audit_input.patient_state 保持一致",
+      "known_conditions": [
+        "diabetes"
+      ],
+      "case_notes": [
+        "演示案例；不含真实患者信息。",
+        "内部标记 _generated_background=true （scenario_id=v42_C_missing_egfr）。"
+      ],
+      "_generated_background": true
+    },
+    "retrieved_evidence": [
+      {
+        "evidence_id": "REF-NONE",
+        "source_title": "未触发任何医学规则",
+        "section": "",
+        "excerpt": "本次审计未命中命中规则与必要上下文；属于 PASS 或纯 兼容性输错路径。",
+        "retrieval_score": 0.0,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      }
+    ],
     "audit_input": {
       "schema_version": "1.0",
       "patient_state": {
@@ -1906,8 +2768,33 @@
     "tags": [],
     "enabled_for_console": false,
     "enabled_for_web": true,
-    "case_profile": null,
-    "retrieved_evidence": [],
+    "case_profile": {
+      "age": null,
+      "sex": null,
+      "visit_type": "follow_up",
+      "chief_complaint": "建议",
+      "history_summary": "当前用药：metformin",
+      "current_condition": "演示场景；与 audit_input.patient_state 保持一致",
+      "known_conditions": [
+        "（演示）"
+      ],
+      "case_notes": [
+        "演示案例；不含真实患者信息。",
+        "内部标记 _generated_background=true （scenario_id=v42_D_string_med_item）。"
+      ],
+      "_generated_background": true
+    },
+    "retrieved_evidence": [
+      {
+        "evidence_id": "REF-NONE",
+        "source_title": "未触发任何医学规则",
+        "section": "",
+        "excerpt": "本次审计未命中命中规则与必要上下文；属于 PASS 或纯 兼容性输错路径。",
+        "retrieval_score": 0.0,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      }
+    ],
     "audit_input": {
       "schema_version": "1.0",
       "patient_state": {
@@ -1938,8 +2825,33 @@
     "tags": [],
     "enabled_for_console": false,
     "enabled_for_web": true,
-    "case_profile": null,
-    "retrieved_evidence": [],
+    "case_profile": {
+      "age": null,
+      "sex": null,
+      "visit_type": "follow_up",
+      "chief_complaint": "演示场景",
+      "history_summary": "当前用药：辛伐他烨",
+      "current_condition": "演示场景；与 audit_input.patient_state 保持一致",
+      "known_conditions": [
+        "辛伐他烨"
+      ],
+      "case_notes": [
+        "演示案例；不含真实患者信息。",
+        "内部标记 _generated_background=true （scenario_id=v42_E_unknown_drug）。"
+      ],
+      "_generated_background": true
+    },
+    "retrieved_evidence": [
+      {
+        "evidence_id": "REF-NONE",
+        "source_title": "未触发任何医学规则",
+        "section": "",
+        "excerpt": "本次审计未命中命中规则与必要上下文；属于 PASS 或纯 兼容性输错路径。",
+        "retrieval_score": 0.0,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      }
+    ],
     "audit_input": {
       "schema_version": "1.0",
       "patient_state": {
@@ -1976,8 +2888,33 @@
     "tags": [],
     "enabled_for_console": false,
     "enabled_for_web": true,
-    "case_profile": null,
-    "retrieved_evidence": [],
+    "case_profile": {
+      "age": null,
+      "sex": null,
+      "visit_type": "follow_up",
+      "chief_complaint": "演示场景",
+      "history_summary": "当前用药：阿托伐他汀",
+      "current_condition": "演示场景；与 audit_input.patient_state 保持一致",
+      "known_conditions": [
+        "阿托伐他汀"
+      ],
+      "case_notes": [
+        "演示案例；不含真实患者信息。",
+        "内部标记 _generated_background=true （scenario_id=v42_F_drug_id_mismatch）。"
+      ],
+      "_generated_background": true
+    },
+    "retrieved_evidence": [
+      {
+        "evidence_id": "REF-NONE",
+        "source_title": "未触发任何医学规则",
+        "section": "",
+        "excerpt": "本次审计未命中命中规则与必要上下文；属于 PASS 或纯 兼容性输错路径。",
+        "retrieval_score": 0.0,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      }
+    ],
     "audit_input": {
       "schema_version": "1.0",
       "patient_state": {
@@ -2014,8 +2951,34 @@
     "tags": [],
     "enabled_for_console": false,
     "enabled_for_web": true,
-    "case_profile": null,
-    "retrieved_evidence": [],
+    "case_profile": {
+      "age": null,
+      "sex": null,
+      "visit_type": "follow_up",
+      "chief_complaint": "开始氨氯地平 1 克，每日 1 次",
+      "history_summary": "（演示场景，未提供历史）",
+      "current_condition": "演示场景；与 audit_input.patient_state 保持一致",
+      "known_conditions": [
+        "（演示）"
+      ],
+      "case_notes": [
+        "演示案例；不含真实患者信息。",
+        "内部标记 _generated_background=true （scenario_id=v42_G_amlodipine_1g）。"
+      ],
+      "_generated_background": true
+    },
+    "retrieved_evidence": [
+      {
+        "evidence_id": "REF-R001_AMLODIPINE_MAX_DAILY_DOSE",
+        "source_title": "Demo",
+        "section": "",
+        "excerpt": "氨氯地平总日剂量超过演示规则上限 10 mg/day。",
+        "rule_id": "R001_AMLODIPINE_MAX_DAILY_DOSE",
+        "retrieval_score": 0.9,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      }
+    ],
     "audit_input": {
       "schema_version": "1.0",
       "patient_state": {
@@ -2056,8 +3019,34 @@
     "tags": [],
     "enabled_for_console": false,
     "enabled_for_web": true,
-    "case_profile": null,
-    "retrieved_evidence": [],
+    "case_profile": {
+      "age": null,
+      "sex": null,
+      "visit_type": "follow_up",
+      "chief_complaint": "演示场景",
+      "history_summary": "（演示场景，未提供历史）",
+      "current_condition": "演示场景；与 audit_input.patient_state 保持一致",
+      "known_conditions": [
+        "（演示）"
+      ],
+      "case_notes": [
+        "演示案例；不含真实患者信息。",
+        "内部标记 _generated_background=true （scenario_id=v42_H_negative_dose）。"
+      ],
+      "_generated_background": true
+    },
+    "retrieved_evidence": [
+      {
+        "evidence_id": "REF-R001_AMLODIPINE_MAX_DAILY_DOSE",
+        "source_title": "Demo",
+        "section": "",
+        "excerpt": "氨氯地平总日剂量超过演示规则上限 10 mg/day。",
+        "rule_id": "R001_AMLODIPINE_MAX_DAILY_DOSE",
+        "retrieval_score": 0.9,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      }
+    ],
     "audit_input": {
       "schema_version": "1.0",
       "patient_state": {
@@ -2098,8 +3087,33 @@
     "tags": [],
     "enabled_for_console": false,
     "enabled_for_web": true,
-    "case_profile": null,
-    "retrieved_evidence": [],
+    "case_profile": {
+      "age": null,
+      "sex": null,
+      "visit_type": "follow_up",
+      "chief_complaint": "演示场景",
+      "history_summary": "当前用药：雷米普利",
+      "current_condition": "演示场景；与 audit_input.patient_state 保持一致",
+      "known_conditions": [
+        "雷米普利"
+      ],
+      "case_notes": [
+        "演示案例；不含真实患者信息。",
+        "内部标记 _generated_background=true （scenario_id=v42_I_replace_no_old）。"
+      ],
+      "_generated_background": true
+    },
+    "retrieved_evidence": [
+      {
+        "evidence_id": "REF-NONE",
+        "source_title": "未触发任何医学规则",
+        "section": "",
+        "excerpt": "本次审计未命中命中规则与必要上下文；属于 PASS 或纯 兼容性输错路径。",
+        "retrieval_score": 0.0,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      }
+    ],
     "audit_input": {
       "schema_version": "1.0",
       "patient_state": {
@@ -2148,8 +3162,34 @@
     "tags": [],
     "enabled_for_console": false,
     "enabled_for_web": true,
-    "case_profile": null,
-    "retrieved_evidence": [],
+    "case_profile": {
+      "age": null,
+      "sex": null,
+      "visit_type": "follow_up",
+      "chief_complaint": "不要喝西柚汁",
+      "history_summary": "当前用药：辛伐他汀",
+      "current_condition": "演示场景；与 audit_input.patient_state 保持一致",
+      "known_conditions": [
+        "辛伐他汀"
+      ],
+      "case_notes": [
+        "演示案例；不含真实患者信息。",
+        "内部标记 _generated_background=true （scenario_id=v42_J_text_food_conflict）。"
+      ],
+      "_generated_background": true
+    },
+    "retrieved_evidence": [
+      {
+        "evidence_id": "REF-R023_STATIN_GRAPEFRUIT",
+        "source_title": "中国血脂管理指南（2023年）",
+        "section": "",
+        "excerpt": "他汀类与西柚/葡萄柚同食会显著升高血药浓度，增加肌病风险。",
+        "rule_id": "R023_STATIN_GRAPEFRUIT",
+        "retrieval_score": 0.9,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      }
+    ],
     "audit_input": {
       "schema_version": "1.0",
       "patient_state": {
@@ -2192,8 +3232,33 @@
     "tags": [],
     "enabled_for_console": false,
     "enabled_for_web": true,
-    "case_profile": null,
-    "retrieved_evidence": [],
+    "case_profile": {
+      "age": null,
+      "sex": null,
+      "visit_type": "follow_up",
+      "chief_complaint": "演示场景",
+      "history_summary": "（演示场景，未提供历史）",
+      "current_condition": "演示场景；与 audit_input.patient_state 保持一致",
+      "known_conditions": [
+        "（演示）"
+      ],
+      "case_notes": [
+        "演示案例；不含真实患者信息。",
+        "内部标记 _generated_background=true （scenario_id=v42_K_system_error）。"
+      ],
+      "_generated_background": true
+    },
+    "retrieved_evidence": [
+      {
+        "evidence_id": "REF-NONE",
+        "source_title": "未触发任何医学规则",
+        "section": "",
+        "excerpt": "本次审计未命中命中规则与必要上下文；属于 PASS 或纯 兼容性输错路径。",
+        "retrieval_score": 0.0,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      }
+    ],
     "audit_input": {
       "schema_version": "1.0",
       "patient_state": {
@@ -2222,8 +3287,33 @@
     "tags": [],
     "enabled_for_console": false,
     "enabled_for_web": true,
-    "case_profile": null,
-    "retrieved_evidence": [],
+    "case_profile": {
+      "age": null,
+      "sex": null,
+      "visit_type": "follow_up",
+      "chief_complaint": "演示场景",
+      "history_summary": "（演示场景，未提供历史）",
+      "current_condition": "演示场景；与 audit_input.patient_state 保持一致",
+      "known_conditions": [
+        "（演示）"
+      ],
+      "case_notes": [
+        "演示案例；不含真实患者信息。",
+        "内部标记 _generated_background=true （scenario_id=v42_L_requires_review）。"
+      ],
+      "_generated_background": true
+    },
+    "retrieved_evidence": [
+      {
+        "evidence_id": "REF-NONE",
+        "source_title": "未触发任何医学规则",
+        "section": "",
+        "excerpt": "本次审计未命中命中规则与必要上下文；属于 PASS 或纯 兼容性输错路径。",
+        "retrieval_score": 0.0,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      }
+    ],
     "audit_input": {
       "schema_version": "1.0",
       "patient_state": {
@@ -2252,8 +3342,33 @@
     "tags": [],
     "enabled_for_console": false,
     "enabled_for_web": true,
-    "case_profile": null,
-    "retrieved_evidence": [],
+    "case_profile": {
+      "age": null,
+      "sex": null,
+      "visit_type": "follow_up",
+      "chief_complaint": "演示场景",
+      "history_summary": "（演示场景，未提供历史）",
+      "current_condition": "演示场景；与 audit_input.patient_state 保持一致",
+      "known_conditions": [
+        "（演示）"
+      ],
+      "case_notes": [
+        "演示案例；不含真实患者信息。",
+        "内部标记 _generated_background=true （scenario_id=v42_M_uncertainty_reasons）。"
+      ],
+      "_generated_background": true
+    },
+    "retrieved_evidence": [
+      {
+        "evidence_id": "REF-NONE",
+        "source_title": "未触发任何医学规则",
+        "section": "",
+        "excerpt": "本次审计未命中命中规则与必要上下文；属于 PASS 或纯 兼容性输错路径。",
+        "retrieval_score": 0.0,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      }
+    ],
     "audit_input": {
       "schema_version": "1.0",
       "patient_state": {
@@ -2284,8 +3399,33 @@
     "tags": [],
     "enabled_for_console": false,
     "enabled_for_web": true,
-    "case_profile": null,
-    "retrieved_evidence": [],
+    "case_profile": {
+      "age": null,
+      "sex": null,
+      "visit_type": "follow_up",
+      "chief_complaint": "演示场景",
+      "history_summary": "（演示场景，未提供历史）",
+      "current_condition": "演示场景；与 audit_input.patient_state 保持一致",
+      "known_conditions": [
+        "（演示）"
+      ],
+      "case_notes": [
+        "演示案例；不含真实患者信息。",
+        "内部标记 _generated_background=true （scenario_id=v42_N_missing_route_start）。"
+      ],
+      "_generated_background": true
+    },
+    "retrieved_evidence": [
+      {
+        "evidence_id": "REF-NONE",
+        "source_title": "未触发任何医学规则",
+        "section": "",
+        "excerpt": "本次审计未命中命中规则与必要上下文；属于 PASS 或纯 兼容性输错路径。",
+        "retrieval_score": 0.0,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      }
+    ],
     "audit_input": {
       "schema_version": "1.0",
       "patient_state": {
@@ -2324,8 +3464,33 @@
     "tags": [],
     "enabled_for_console": false,
     "enabled_for_web": true,
-    "case_profile": null,
-    "retrieved_evidence": [],
+    "case_profile": {
+      "age": null,
+      "sex": null,
+      "visit_type": "follow_up",
+      "chief_complaint": "演示场景",
+      "history_summary": "指标：egfr=24 BANANA",
+      "current_condition": "演示场景；与 audit_input.patient_state 保持一致",
+      "known_conditions": [
+        "（演示）"
+      ],
+      "case_notes": [
+        "演示案例；不含真实患者信息。",
+        "内部标记 _generated_background=true （scenario_id=v42_O_measurement_unit_error）。"
+      ],
+      "_generated_background": true
+    },
+    "retrieved_evidence": [
+      {
+        "evidence_id": "REF-NONE",
+        "source_title": "未触发任何医学规则",
+        "section": "",
+        "excerpt": "本次审计未命中命中规则与必要上下文；属于 PASS 或纯 兼容性输错路径。",
+        "retrieval_score": 0.0,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      }
+    ],
     "audit_input": {
       "schema_version": "1.0",
       "patient_state": {
@@ -2363,8 +3528,33 @@
     "tags": [],
     "enabled_for_console": false,
     "enabled_for_web": true,
-    "case_profile": null,
-    "retrieved_evidence": [],
+    "case_profile": {
+      "age": null,
+      "sex": null,
+      "visit_type": "follow_up",
+      "chief_complaint": "建议暂停二甲双胍并尽快就医",
+      "history_summary": "当前用药：二甲双胍",
+      "current_condition": "演示场景；与 audit_input.patient_state 保持一致",
+      "known_conditions": [
+        "二甲双胍"
+      ],
+      "case_notes": [
+        "演示案例；不含真实患者信息。",
+        "内部标记 _generated_background=true （scenario_id=v42_P_hold_metformin_no_egfr）。"
+      ],
+      "_generated_background": true
+    },
+    "retrieved_evidence": [
+      {
+        "evidence_id": "REF-NONE",
+        "source_title": "未触发任何医学规则",
+        "section": "",
+        "excerpt": "本次审计未命中命中规则与必要上下文；属于 PASS 或纯 兼容性输错路径。",
+        "retrieval_score": 0.0,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      }
+    ],
     "audit_input": {
       "schema_version": "1.0",
       "patient_state": {
@@ -2427,12 +3617,13 @@
     },
     "retrieved_evidence": [
       {
-        "evidence_id": "E001",
-        "source_title": "演示用高血压管理知识",
-        "section": "稳定期生活方式管理",
-        "excerpt": "血压控制稳定时可继续规律监测并进行中等强度运动。",
-        "retrieval_score": 0.91,
-        "is_demo_evidence": true
+        "evidence_id": "REF-NONE",
+        "source_title": "未触发任何医学规则",
+        "section": "",
+        "excerpt": "本次审计未命中命中规则与必要上下文；属于 PASS 或纯 兼容性输错路径。",
+        "retrieval_score": 0.0,
+        "is_demo_evidence": true,
+        "_generated_background": true
       }
     ],
     "audit_input": {
@@ -2569,12 +3760,14 @@
     },
     "retrieved_evidence": [
       {
-        "evidence_id": "E002",
-        "source_title": "演示用糖尿病肾功能知识",
-        "section": "二甲双胍",
-        "excerpt": "eGFR 低于 30 时不得直接继续二甲双胍。",
-        "retrieval_score": 0.97,
-        "is_demo_evidence": true
+        "evidence_id": "REF-R002_METFORMIN_EGFR_LT_30",
+        "source_title": "中国糖尿病防治指南（2024版）",
+        "section": "降糖药选择",
+        "excerpt": "患者 eGFR < 30，不能直接给出新增或继续二甲双胍的建议。",
+        "rule_id": "R002_METFORMIN_EGFR_LT_30",
+        "retrieval_score": 0.9,
+        "is_demo_evidence": true,
+        "_generated_background": true
       }
     ],
     "audit_input": {
@@ -2706,12 +3899,14 @@
     },
     "retrieved_evidence": [
       {
-        "evidence_id": "E003",
-        "source_title": "演示用糖尿病肾功能知识",
-        "section": "剂量复核",
-        "excerpt": "30≤eGFR<45 时需评估二甲双胍剂量及继续用药风险。",
-        "retrieval_score": 0.94,
-        "is_demo_evidence": true
+        "evidence_id": "REF-R010_METFORMIN_EGFR_30_TO_45",
+        "source_title": "中国糖尿病防治指南（2024版）",
+        "section": "",
+        "excerpt": "患者 30 <= eGFR < 45，二甲双胍需要减量或停药评估。",
+        "rule_id": "R010_METFORMIN_EGFR_30_TO_45",
+        "retrieval_score": 0.9,
+        "is_demo_evidence": true,
+        "_generated_background": true
       }
     ],
     "audit_input": {
@@ -2842,12 +4037,24 @@
     },
     "retrieved_evidence": [
       {
-        "evidence_id": "E004",
-        "source_title": "演示用高血压急症知识",
-        "section": "急症处理",
-        "excerpt": "高血压急症不应自行加药，应复测、筛查危险症状并就医。",
-        "retrieval_score": 0.98,
-        "is_demo_evidence": true
+        "evidence_id": "REF-R016A_HIGH_BP_SELF_INCREASE_BLOCK",
+        "source_title": "中国高血压防治指南（2024年修订版）",
+        "section": "高血压急症处理",
+        "excerpt": "高血压急症应就医评估，不应自行加药。",
+        "rule_id": "R016A_HIGH_BP_SELF_INCREASE_BLOCK",
+        "retrieval_score": 0.9,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      },
+      {
+        "evidence_id": "REF-R016B_HIGH_BP_MISSING_CARE_REVIEW",
+        "source_title": "中国高血压防治指南（2024年修订版）",
+        "section": "高血压急症处理",
+        "excerpt": "急症必须复测血压、就医并筛查头痛/胸痛/视力等症状。",
+        "rule_id": "R016B_HIGH_BP_MISSING_CARE_REVIEW",
+        "retrieval_score": 0.9,
+        "is_demo_evidence": true,
+        "_generated_background": true
       }
     ],
     "audit_input": {
@@ -2987,12 +4194,34 @@
     },
     "retrieved_evidence": [
       {
-        "evidence_id": "E005",
-        "source_title": "演示用糖尿病运动知识",
-        "section": "低血糖处理",
-        "excerpt": "低血糖时应纠正并复测，不应继续胰岛素或立即进行剧烈运动。",
-        "retrieval_score": 0.99,
-        "is_demo_evidence": true
+        "evidence_id": "REF-R005_INSULIN_LOW_GLUCOSE_VIGOROUS_EXERCISE",
+        "source_title": "中国2型糖尿病运动治疗指南（2024版）",
+        "section": "",
+        "excerpt": "患者使用胰岛素且当前血糖低于 3.9 mmol/L，不能直接建议立即进行剧烈运动。",
+        "rule_id": "R005_INSULIN_LOW_GLUCOSE_VIGOROUS_EXERCISE",
+        "retrieval_score": 0.9,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      },
+      {
+        "evidence_id": "REF-R015B_LOW_GLUCOSE_MISSING_CARE_REVIEW",
+        "source_title": "中国2型糖尿病运动治疗指南（2024版）",
+        "section": "运动前血糖评估",
+        "excerpt": "低血糖需要纠正、复测、必要时就医。",
+        "rule_id": "R015B_LOW_GLUCOSE_MISSING_CARE_REVIEW",
+        "retrieval_score": 0.9,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      },
+      {
+        "evidence_id": "REF-R015A_LOW_GLUCOSE_CONTINUE_INSULIN_BLOCK",
+        "source_title": "中国2型糖尿病运动治疗指南（2024版）",
+        "section": "运动前血糖评估",
+        "excerpt": "低血糖时需要先进食纠正，不能按原剂量继续给药。",
+        "rule_id": "R015A_LOW_GLUCOSE_CONTINUE_INSULIN_BLOCK",
+        "retrieval_score": 0.9,
+        "is_demo_evidence": true,
+        "_generated_background": true
       }
     ],
     "audit_input": {
@@ -3125,12 +4354,24 @@
     },
     "retrieved_evidence": [
       {
-        "evidence_id": "E006",
-        "source_title": "演示用相互作用知识",
-        "section": "他汀类相互作用",
-        "excerpt": "辛伐他汀与克拉霉素联用可致严重肌毒性；西柚会进一步升高风险。",
-        "retrieval_score": 0.96,
-        "is_demo_evidence": true
+        "evidence_id": "REF-R003_SIMVASTATIN_CLARITHROMYCIN",
+        "source_title": "中国血脂管理指南（2023年）",
+        "section": "",
+        "excerpt": "检测到辛伐他汀与克拉霉素联用风险（横纹肌溶解）。",
+        "rule_id": "R003_SIMVASTATIN_CLARITHROMYCIN",
+        "retrieval_score": 0.9,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      },
+      {
+        "evidence_id": "REF-R023_STATIN_GRAPEFRUIT",
+        "source_title": "中国血脂管理指南（2023年）",
+        "section": "",
+        "excerpt": "他汀类与西柚/葡萄柚同食会显著升高血药浓度，增加肌病风险。",
+        "rule_id": "R023_STATIN_GRAPEFRUIT",
+        "retrieval_score": 0.9,
+        "is_demo_evidence": true,
+        "_generated_background": true
       }
     ],
     "audit_input": {
@@ -3278,12 +4519,44 @@
     },
     "retrieved_evidence": [
       {
-        "evidence_id": "E007",
-        "source_title": "演示用高钾管理知识",
+        "evidence_id": "REF-R020A_HYPERKALEMIA_CONTINUE_SPIRONOLACTONE_BLOCK",
+        "source_title": "国家基层高血压防治管理指南（2025版）",
         "section": "联合用药监测",
-        "excerpt": "血钾升高时不应继续 ACEI 或螺内酯，并需紧急评估。",
-        "retrieval_score": 0.97,
-        "is_demo_evidence": true
+        "excerpt": "螺内酯使用期间血钾 > 5.0 应减量或停药。",
+        "rule_id": "R020A_HYPERKALEMIA_CONTINUE_SPIRONOLACTONE_BLOCK",
+        "retrieval_score": 0.9,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      },
+      {
+        "evidence_id": "REF-R014A_HYPERKALEMIA_CONTINUE_ACEI_BLOCK",
+        "source_title": "国家基层高血压防治管理指南（2025版）",
+        "section": "联合用药监测",
+        "excerpt": "血钾 > 5.0 时继续 ACEI/ARB 增加高钾心律失常风险。",
+        "rule_id": "R014A_HYPERKALEMIA_CONTINUE_ACEI_BLOCK",
+        "retrieval_score": 0.9,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      },
+      {
+        "evidence_id": "REF-R_HYPERKALEMIA_STOP_REMINDER",
+        "source_title": "国家基层高血压防治管理指南（2025版）",
+        "section": "高钾处理",
+        "excerpt": "高钾血症需要紧急就医评估。",
+        "rule_id": "R_HYPERKALEMIA_STOP_REMINDER",
+        "retrieval_score": 0.9,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      },
+      {
+        "evidence_id": "REF-R004_LISINOPRIL_POTASSIUM_SALT",
+        "source_title": "国家基层高血压防治管理指南（2025版）",
+        "section": "",
+        "excerpt": "ACEI/ARB 背景下出现含钾盐替代品或钾补充剂建议，需要复核高钾风险。",
+        "rule_id": "R004_LISINOPRIL_POTASSIUM_SALT",
+        "retrieval_score": 0.9,
+        "is_demo_evidence": true,
+        "_generated_background": true
       }
     ],
     "audit_input": {
@@ -3436,12 +4709,24 @@
     },
     "retrieved_evidence": [
       {
-        "evidence_id": "E008",
-        "source_title": "演示用痛风生活处方",
-        "section": "急性期饮食与运动",
-        "excerpt": "急性发作期避免剧烈运动和高嘌呤食物。",
-        "retrieval_score": 0.95,
-        "is_demo_evidence": true
+        "evidence_id": "REF-R022_HYPERURICEMIA_FOOD_AVOID",
+        "source_title": "痛风的生活处方：与尿酸和解的八大健康法则",
+        "section": "处方一 饮食革命",
+        "excerpt": "高尿酸/痛风背景下不应推荐高嘌呤食物、酒精或果糖饮料。",
+        "rule_id": "R022_HYPERURICEMIA_FOOD_AVOID",
+        "retrieval_score": 0.9,
+        "is_demo_evidence": true,
+        "_generated_background": true
+      },
+      {
+        "evidence_id": "REF-R021_GOUT_ACUTE_VIGOROUS_BLOCK",
+        "source_title": "痛风的生活处方：与尿酸和解的八大健康法则",
+        "section": "处方四 运动疗法",
+        "excerpt": "剧烈运动可能诱发痛风急性发作。",
+        "rule_id": "R021_GOUT_ACUTE_VIGOROUS_BLOCK",
+        "retrieval_score": 0.9,
+        "is_demo_evidence": true,
+        "_generated_background": true
       }
     ],
     "audit_input": {
