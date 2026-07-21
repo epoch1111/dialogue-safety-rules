@@ -471,7 +471,7 @@
     if (ma.route) list.appendChild(el("dt", null, "途径"),
       el("dd", null, ma.route));
     if (ma.use_current_regimen) list.appendChild(el("dt", null, "继续当前方案"),
-      el("dd", null, "true"));
+      el("dd", null, "✓ 是"));
     if (ma.replace_drug_id || ma.replace_drug_name)
       list.appendChild(el("dt", null, "替换自"),
         el("dd", null, `${ma.replace_drug_name || ma.replace_drug_id}`));
