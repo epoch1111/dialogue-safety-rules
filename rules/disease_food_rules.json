@@ -1,0 +1,64 @@
+{
+  "rules": [
+    {
+      "id": "R022_HYPERURICEMIA_FOOD_AVOID",
+      "version": 2,
+      "status": "active",
+      "type": "disease_food",
+      "severity": "REVIEW",
+      "triggers": {
+        "risk_flags_any": ["hyperuricemia_gout", "acute_gout_flare"],
+        "keywords_any": [
+          "猪肝", "动物内脏", "浓肉汤", "老火鸡汤", "沙丁鱼", "带鱼",
+          "基围虾", "牡蛎", "扇贝", "螃蟹", "生蚝", "海鲜",
+          "啤酒", "黄酒", "白酒", "含糖饮料", "果糖",
+          "五花肉", "排骨", "牛腩", "黄豆", "黑豆"
+        ]
+      },
+      "parameters": {
+        "disease_code": "hyperuricemia_gout",
+        "keywords": [
+          "猪肝", "动物内脏", "浓肉汤", "老火鸡汤", "沙丁鱼", "带鱼",
+          "基围虾", "牡蛎", "扇贝", "螃蟹", "生蚝", "海鲜",
+          "啤酒", "黄酒", "白酒", "含糖饮料", "果糖",
+          "五花肉", "排骨", "牛腩", "黄豆", "黑豆"
+        ],
+        "required_action": "recommend"
+      },
+      "message": "高尿酸/痛风背景下不应推荐高嘌呤食物、酒精或果糖饮料。",
+      "source": {
+        "document_title": "痛风的生活处方：与尿酸和解的八大健康法则",
+        "document_version": "2025",
+        "section": "处方一 饮食革命"
+      }
+    },
+    {
+      "id": "R024_DYSLIPIDEMIA_FOOD_AVOID",
+      "version": 2,
+      "status": "active",
+      "type": "disease_food",
+      "severity": "REVIEW",
+      "triggers": {
+        "risk_flags_any": ["dyslipidemia"],
+        "keywords_any": [
+          "动物油", "五花肉", "排骨", "牛腩", "油条", "油饼",
+          "油炸糕点", "起酥油", "氢化植物油", "人造奶油"
+        ]
+      },
+      "parameters": {
+        "disease_code": "dyslipidemia",
+        "keywords": [
+          "动物油", "五花肉", "排骨", "牛腩", "油条", "油饼",
+          "油炸糕点", "起酥油", "氢化植物油", "人造奶油"
+        ],
+        "required_action": "recommend"
+      },
+      "message": "血脂异常背景下不应推荐高饱和脂肪/反式脂肪食物。",
+      "source": {
+        "document_title": "高脂血症营养和运动指导原则（2024年版）",
+        "document_version": "2024",
+        "section": "营养指导原则"
+      }
+    }
+  ]
+}

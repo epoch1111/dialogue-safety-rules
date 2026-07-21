@@ -1,0 +1,22 @@
+{
+  "ruleset_version": "dialogue-safety-rules-4.2.0",
+  "schema_version": 4,
+  "input_schema_version": "1.0",
+  "decision_policy": {
+    "BLOCK": "拦截原始回复，不允许发送给患者",
+    "REVIEW": "暂缓发送，进入人工复核",
+    "PASS": "允许发送"
+  },
+  "rule_files": [
+    "aliases.json",
+    "patient_risk_rules.json",
+    "response_compliance_rules.json",
+    "dose_rules.json",
+    "patient_state_rules.json",
+    "drug_drug_rules.json",
+    "drug_food_rules.json",
+    "drug_exercise_rules.json",
+    "disease_food_rules.json",
+    "disease_exercise_rules.json"
+  ]
+}

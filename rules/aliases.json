@@ -1,0 +1,35 @@
+{
+  "amlodipine": ["amlodipine", "氨氯地平", "苯磺酸氨氯地平"],
+  "metformin": ["metformin", "二甲双胍", "盐酸二甲双胍"],
+  "simvastatin": ["simvastatin", "辛伐他汀"],
+  "atorvastatin": ["atorvastatin", "阿托伐他汀"],
+  "clarithromycin": ["clarithromycin", "克拉霉素"],
+  "lisinopril": ["lisinopril", "赖诺普利"],
+  "ramipril": ["ramipril", "雷米普利"],
+  "irbesartan": ["irbesartan", "厄贝沙坦"],
+  "insulin": ["insulin", "胰岛素", "甘精胰岛素", "门冬胰岛素", "地特胰岛素", "德谷胰岛素", "预混胰岛素"],
+  "glimepiride": ["glimepiride", "格列美脲"],
+  "gliclazide": ["gliclazide", "格列齐特"],
+  "sitagliptin": ["sitagliptin", "西格列汀", "磷酸西格列汀"],
+  "empagliflozin": ["empagliflozin", "恩格列净"],
+  "dapagliflozin": ["dapagliflozin", "达格列净"],
+  "aspirin": ["aspirin", "阿司匹林", "拜阿司匹林", "肠溶阿司匹林"],
+  "colchicine": ["colchicine", "秋水仙碱"],
+  "allopurinol": ["allopurinol", "别嘌醇", "别嘌呤醇"],
+  "febuxostat": ["febuxostat", "非布司他"],
+  "benzbromarone": ["benzbromarone", "苯溴马隆"],
+  "celecoxib": ["celecoxib", "塞来昔布"],
+  "etoricoxib": ["etoricoxib", "依托考昔"],
+  "ibuprofen": ["ibuprofen", "布洛芬"],
+  "hydrochlorothiazide": ["hydrochlorothiazide", "氢氯噻嗪"],
+  "furosemide": ["furosemide", "呋塞米", "速尿"],
+  "spironolactone": ["spironolactone", "螺内酯"],
+  "disease_aliases": {
+    "hyperuricemia_gout": [
+      "hyperuricemia_gout", "高尿酸血症", "痛风", "gout", "hyperuricemia"
+    ],
+    "dyslipidemia": [
+      "dyslipidemia", "高脂血症", "血脂异常", "hyperlipidemia"
+    ]
+  }
+}

@@ -1,0 +1,119 @@
+{
+  "rules": [
+    {
+      "id": "R001_AMLODIPINE_MAX_DAILY_DOSE",
+      "version": 1,
+      "status": "active",
+      "type": "max_daily_dose",
+      "severity": "BLOCK",
+      "triggers": {
+        "drugs_any": ["amlodipine"],
+        "keywords_any": [],
+        "patient_fields_any": []
+      },
+      "parameters": {
+        "drug": "amlodipine",
+        "max_daily_mg": 10
+      },
+      "message": "氨氯地平总日剂量超过演示规则上限 10 mg/day。",
+      "source": {
+        "document_title": "Demo",
+        "document_version": "1.0",
+        "section": "",
+        "evidence_text": ""
+      }
+    },
+    {
+      "id": "R006_COLCHICINE_MAX_DAILY_DOSE",
+      "version": 1,
+      "status": "active",
+      "type": "max_daily_dose",
+      "severity": "BLOCK",
+      "triggers": {
+        "drugs_any": ["colchicine"],
+        "keywords_any": [],
+        "patient_fields_any": []
+      },
+      "parameters": {
+        "drug": "colchicine",
+        "max_daily_mg": 1.5
+      },
+      "message": "秋水仙碱急性期总日剂量超过 1.5 mg/day，建议由医生重新评估。",
+      "source": {
+        "document_title": "痛风的生活处方：与尿酸和解的八大健康法则",
+        "document_version": "2025",
+        "section": "处方五",
+        "evidence_text": "秋水仙碱首剂 1mg，1 小时后 0.5mg，12 小时后 0.5mg，1-3 次/日。"
+      }
+    },
+    {
+      "id": "R007_ALLOPURINOL_MAX_DAILY_DOSE",
+      "version": 1,
+      "status": "active",
+      "type": "max_daily_dose",
+      "severity": "BLOCK",
+      "triggers": {
+        "drugs_any": ["allopurinol"],
+        "keywords_any": [],
+        "patient_fields_any": []
+      },
+      "parameters": {
+        "drug": "allopurinol",
+        "max_daily_mg": 600
+      },
+      "message": "别嘌醇日剂量超过常用上限 600 mg/day，需要医生复核。",
+      "source": {
+        "document_title": "中国高尿酸血症与痛风诊疗指南（2019）",
+        "document_version": "2019",
+        "section": "降尿酸治疗",
+        "evidence_text": "别嘌醇常规日剂量不应超过 600 mg。"
+      }
+    },
+    {
+      "id": "R008_METFORMIN_MAX_DAILY_DOSE",
+      "version": 1,
+      "status": "active",
+      "type": "max_daily_dose",
+      "severity": "BLOCK",
+      "triggers": {
+        "drugs_any": ["metformin"],
+        "keywords_any": [],
+        "patient_fields_any": []
+      },
+      "parameters": {
+        "drug": "metformin",
+        "max_daily_mg": 2000
+      },
+      "message": "二甲双胍总日剂量超过 2000 mg/day，需要医生复核。",
+      "source": {
+        "document_title": "中国糖尿病防治指南（2024版）",
+        "document_version": "2024",
+        "section": "降糖药物治疗",
+        "evidence_text": "二甲双胍最大推荐日剂量为 2000 mg。"
+      }
+    },
+    {
+      "id": "R009_IBUPROFEN_MAX_DAILY_DOSE",
+      "version": 1,
+      "status": "active",
+      "type": "max_daily_dose",
+      "severity": "REVIEW",
+      "triggers": {
+        "drugs_any": ["ibuprofen"],
+        "keywords_any": [],
+        "patient_fields_any": []
+      },
+      "parameters": {
+        "drug": "ibuprofen",
+        "max_daily_mg": 1200
+      },
+      "message": "布洛芬日剂量超过 1200 mg/day，建议医生评估心血管与胃肠风险。",
+      "source": {
+        "document_title": "中国高尿酸血症与痛风诊疗指南（2019）",
+        "document_version": "2019",
+        "section": "急性期 NSAIDs",
+        "evidence_text": "布洛芬常用日剂量不超过 1200 mg。"
+      }
+    }
+  ]
+}

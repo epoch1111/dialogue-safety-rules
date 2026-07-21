@@ -1,0 +1,185 @@
+{
+  "rules": [
+    {
+      "id": "R016A_HIGH_BP_SELF_INCREASE_BLOCK",
+      "version": 2,
+      "status": "active",
+      "type": "response_compliance",
+      "severity": "BLOCK",
+      "triggers": {
+        "risk_flags_any": ["severe_hypertension"],
+        "drugs_any": ["amlodipine", "lisinopril", "ramipril", "irbesartan"]
+      },
+      "parameters": {
+        "kind": "forbidden_medication_action",
+        "forbidden_actions": ["start", "increase", "replace"],
+        "drugs": ["amlodipine", "lisinopril", "ramipril", "irbesartan"]
+      },
+      "message": "高血压急症下不应自行新增或增加降压药剂量。",
+      "source": {
+        "document_title": "中国高血压防治指南（2024年修订版）",
+        "document_version": "2024",
+        "section": "高血压急症处理",
+        "evidence_text": "高血压急症应就医评估，不应自行加药。"
+      }
+    },
+    {
+      "id": "R016B_HIGH_BP_MISSING_CARE_REVIEW",
+      "version": 2,
+      "status": "active",
+      "type": "response_compliance",
+      "severity": "REVIEW",
+      "triggers": {
+        "risk_flags_any": ["severe_hypertension"]
+      },
+      "parameters": {
+        "kind": "required_care_action",
+        "required_care_types": [
+          "repeat_measurement",
+          "urgent_medical_evaluation",
+          "emergency_symptom_screening"
+        ]
+      },
+      "message": "高血压急症回复缺少复测/就医/危险症状筛查等关键医疗建议。",
+      "source": {
+        "document_title": "中国高血压防治指南（2024年修订版）",
+        "document_version": "2024",
+        "section": "高血压急症处理",
+        "evidence_text": "急症必须复测血压、就医并筛查头痛/胸痛/视力等症状。"
+      }
+    },
+    {
+      "id": "R015A_LOW_GLUCOSE_CONTINUE_INSULIN_BLOCK",
+      "version": 2,
+      "status": "active",
+      "type": "response_compliance",
+      "severity": "BLOCK",
+      "triggers": {
+        "risk_flags_any": ["hypoglycemia"],
+        "drugs_any": ["insulin"]
+      },
+      "parameters": {
+        "kind": "forbidden_medication_action",
+        "forbidden_actions": ["continue", "increase"],
+        "drugs": ["insulin"]
+      },
+      "message": "低血糖时不应继续或增加胰岛素剂量。",
+      "source": {
+        "document_title": "中国2型糖尿病运动治疗指南（2024版）",
+        "document_version": "2024",
+        "section": "运动前血糖评估",
+        "evidence_text": "低血糖时需要先进食纠正，不能按原剂量继续给药。"
+      }
+    },
+    {
+      "id": "R015B_LOW_GLUCOSE_MISSING_CARE_REVIEW",
+      "version": 2,
+      "status": "active",
+      "type": "response_compliance",
+      "severity": "REVIEW",
+      "triggers": {
+        "risk_flags_any": ["hypoglycemia"]
+      },
+      "parameters": {
+        "kind": "required_care_action",
+        "required_care_types": [
+          "repeat_measurement",
+          "urgent_medical_evaluation",
+          "monitor"
+        ]
+      },
+      "message": "低血糖回复缺少纠正、复测或就医建议。",
+      "source": {
+        "document_title": "中国2型糖尿病运动治疗指南（2024版）",
+        "document_version": "2024",
+        "section": "运动前血糖评估",
+        "evidence_text": "低血糖需要纠正、复测、必要时就医。"
+      }
+    },
+    {
+      "id": "R014A_HYPERKALEMIA_CONTINUE_ACEI_BLOCK",
+      "version": 2,
+      "status": "active",
+      "type": "response_compliance",
+      "severity": "BLOCK",
+      "triggers": {
+        "risk_flags_any": ["hyperkalemia"],
+        "drugs_any": ["lisinopril", "ramipril", "irbesartan"]
+      },
+      "parameters": {
+        "kind": "forbidden_medication_action",
+        "forbidden_actions": ["continue", "start", "increase"],
+        "drugs": ["lisinopril", "ramipril", "irbesartan"]
+      },
+      "message": "高钾血症时不应继续或新增 ACEI/ARB。",
+      "source": {
+        "document_title": "国家基层高血压防治管理指南（2025版）",
+        "document_version": "2025",
+        "section": "联合用药监测",
+        "evidence_text": "血钾 > 5.0 时继续 ACEI/ARB 增加高钾心律失常风险。"
+      }
+    },
+    {
+      "id": "R020A_HYPERKALEMIA_CONTINUE_SPIRONOLACTONE_BLOCK",
+      "version": 2,
+      "status": "active",
+      "type": "response_compliance",
+      "severity": "BLOCK",
+      "triggers": {
+        "risk_flags_any": ["hyperkalemia"],
+        "drugs_any": ["spironolactone"]
+      },
+      "parameters": {
+        "kind": "forbidden_medication_action",
+        "forbidden_actions": ["continue", "start", "increase"],
+        "drugs": ["spironolactone"]
+      },
+      "message": "高钾血症时不应继续或新增螺内酯。",
+      "source": {
+        "document_title": "国家基层高血压防治管理指南（2025版）",
+        "document_version": "2025",
+        "section": "联合用药监测",
+        "evidence_text": "螺内酯使用期间血钾 > 5.0 应减量或停药。"
+      }
+    },
+    {
+      "id": "R_HYPERKALEMIA_STOP_REMINDER",
+      "version": 2,
+      "status": "active",
+      "type": "response_compliance",
+      "severity": "WARN",
+      "triggers": {
+        "risk_flags_any": ["hyperkalemia"]
+      },
+      "parameters": {
+        "kind": "required_care_action",
+        "required_care_types": ["urgent_medical_evaluation"]
+      },
+      "message": "高钾血症需要紧急就医评估。",
+      "source": {
+        "document_title": "国家基层高血压防治管理指南（2025版）",
+        "document_version": "2025",
+        "section": "高钾处理"
+      }
+    },
+    {
+      "id": "R_DDI_REQUIRES_STOP_REMINDER",
+      "version": 2,
+      "status": "active",
+      "type": "response_compliance",
+      "severity": "INFO",
+      "triggers": {
+        "risk_flags_any": ["ddi_active_concomitant"]
+      },
+      "parameters": {
+        "kind": "required_stop_drug",
+        "drugs": []
+      },
+      "message": "DDI 同时存在时建议 LLM 显式 stop 其中一种药。",
+      "source": {
+        "document_title": "通用药物相互作用提醒",
+        "document_version": "n/a"
+      }
+    }
+  ]
+}

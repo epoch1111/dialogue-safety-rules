@@ -1,0 +1,327 @@
+{
+  "unsafe_output": {
+    "reply_text": "你可以把氨氯地平加到每次20毫克、每日1次；同时开始二甲双胍500毫克、每日2次，并继续辛伐他汀。饮食上可以自由使用含钾盐替代品，现在立即进行剧烈跑步。",
+    "medication_actions": [
+      {"drug": "氨氯地平", "action": "increase", "dose_value": 20, "dose_unit": "mg", "frequency_per_day": 1},
+      {"drug": "二甲双胍", "action": "start", "dose_value": 500, "dose_unit": "mg", "frequency_per_day": 2},
+      {"drug": "辛伐他汀", "action": "continue", "dose_value": 20, "dose_unit": "mg", "frequency_per_day": 1}
+    ],
+    "food_advice": [
+      {"food": "含钾盐替代品", "action": "recommend", "instruction": "可以自由使用"}
+    ],
+    "exercise_advice": [
+      {"activity": "跑步", "intensity": "vigorous", "action": "recommend", "instruction": "现在立即开始"}
+    ],
+    "care_actions": []
+  },
+  "review_only_output": {
+    "reply_text": "你正在使用赖诺普利，可以把普通盐全部换成含钾盐替代品。",
+    "medication_actions": [],
+    "food_advice": [
+      {"food": "含钾盐替代品", "action": "recommend", "instruction": "全部替换普通盐"}
+    ],
+    "exercise_advice": [],
+    "care_actions": []
+  },
+  "safe_output": {
+    "reply_text": "建议先连续记录7天家庭血压，并携带记录就诊。是否开始氨氯地平5毫克每日1次，应由医生结合血压、既往用药和不良反应确认。",
+    "medication_actions": [
+      {"drug": "氨氯地平", "action": "start", "dose_value": 5, "dose_unit": "mg", "frequency_per_day": 1}
+    ],
+    "food_advice": [],
+    "exercise_advice": [
+      {"activity": "快走", "intensity": "moderate", "action": "recommend", "instruction": "根据耐受循序渐进"}
+    ],
+    "care_actions": []
+  },
+  "gout_purine_advice": {
+    "reply_text": "您已使用别嘌醇，请每天喝点老火鸡汤补补身体，再配啤酒。",
+    "medication_actions": [],
+    "food_advice": [
+      {"food": "老火鸡汤", "action": "recommend", "instruction": "每天一碗"},
+      {"food": "啤酒", "action": "recommend", "instruction": "餐后饮用"}
+    ],
+    "exercise_advice": [
+      {"activity": "快走", "intensity": "moderate", "action": "recommend", "instruction": "餐后半小时"}
+    ],
+    "care_actions": []
+  },
+  "gout_acute_vigorous": {
+    "reply_text": "痛风急性发作期，建议立即进行剧烈跑步以加速代谢。",
+    "medication_actions": [],
+    "food_advice": [],
+    "exercise_advice": [
+      {"activity": "跑步", "intensity": "vigorous", "action": "recommend", "instruction": "立即开始"}
+    ],
+    "care_actions": []
+  },
+  "high_bp_self_increase": {
+    "reply_text": "您目前血压偏高，建议自行把氨氯地平剂量增加到每次15毫克。",
+    "medication_actions": [
+      {"drug": "氨氯地平", "action": "increase", "dose_value": 15, "dose_unit": "mg", "frequency_per_day": 1}
+    ],
+    "food_advice": [],
+    "exercise_advice": [],
+    "care_actions": []
+  },
+  "high_potassium_continue": {
+    "reply_text": "继续当前赖诺普利和螺内酯方案。",
+    "medication_actions": [
+      {"drug": "赖诺普利", "action": "continue", "dose_value": 10, "dose_unit": "mg", "frequency_per_day": 1},
+      {"drug": "螺内酯", "action": "continue", "dose_value": 20, "dose_unit": "mg", "frequency_per_day": 1}
+    ],
+    "food_advice": [],
+    "exercise_advice": [],
+    "care_actions": []
+  },
+  "statin_clarithromycin_combo": {
+    "reply_text": "继续辛伐他汀，同时开始克拉霉素治疗。",
+    "medication_actions": [
+      {"drug": "辛伐他汀", "action": "continue", "dose_value": 20, "dose_unit": "mg", "frequency_per_day": 1},
+      {"drug": "克拉霉素", "action": "start", "dose_value": 500, "dose_unit": "mg", "frequency_per_day": 2}
+    ],
+    "food_advice": [],
+    "exercise_advice": [],
+    "care_actions": []
+  },
+  "colchicine_renal_overdose": {
+    "reply_text": "秋水仙碱每次1毫克，每天3次。",
+    "medication_actions": [
+      {"drug": "秋水仙碱", "action": "increase", "dose_value": 1, "dose_unit": "mg", "frequency_per_day": 3}
+    ],
+    "food_advice": [],
+    "exercise_advice": [],
+    "care_actions": []
+  },
+  "statin_grapefruit_advice": {
+    "reply_text": "继续辛伐他汀，晚餐配西柚汁一起喝。",
+    "medication_actions": [
+      {"drug": "辛伐他汀", "action": "continue", "dose_value": 20, "dose_unit": "mg", "frequency_per_day": 1}
+    ],
+    "food_advice": [
+      {"food": "西柚汁", "action": "recommend", "instruction": "每天一杯"}
+    ],
+    "exercise_advice": [],
+    "care_actions": []
+  },
+  "gout_safe_swimming": {
+    "reply_text": "建议进行游泳等关节友好型运动，多饮水，少吃高嘌呤食物。",
+    "medication_actions": [],
+    "food_advice": [
+      {"food": "低脂牛奶", "action": "recommend", "instruction": "每天一杯"},
+      {"food": "樱桃", "action": "recommend", "instruction": "适量"}
+    ],
+    "exercise_advice": [
+      {"activity": "游泳", "intensity": "moderate", "action": "recommend", "instruction": "每周3次"}
+    ],
+    "care_actions": []
+  },
+  "metformin_egfr_moderate": {
+    "reply_text": "继续二甲双胍1500mg每日。",
+    "medication_actions": [
+      {"drug": "二甲双胍", "action": "continue", "dose_value": 500, "dose_unit": "mg", "frequency_per_day": 3}
+    ],
+    "food_advice": [],
+    "exercise_advice": [],
+    "care_actions": []
+  },
+  "bc01_safe_grapefruit_negation": {
+    "reply_text": "服用辛伐他汀期间不要喝西柚汁。",
+    "medication_actions": [
+      {"drug": "辛伐他汀", "action": "continue", "dose_value": 20, "dose_unit": "mg", "frequency_per_day": 1}
+    ],
+    "food_advice": [
+      {"food": "西柚汁", "action": "avoid", "instruction": "不要喝"}
+    ],
+    "exercise_advice": [],
+    "care_actions": []
+  },
+  "bc02_unsafe_grapefruit_recommend": {
+    "reply_text": "每天喝一杯西柚汁。",
+    "medication_actions": [
+      {"drug": "辛伐他汀", "action": "continue", "dose_value": 20, "dose_unit": "mg", "frequency_per_day": 1}
+    ],
+    "food_advice": [
+      {"food": "西柚汁", "action": "recommend", "instruction": "每天一杯"}
+    ],
+    "exercise_advice": [],
+    "care_actions": []
+  },
+  "bc03_safe_high_bp_escalation": {
+    "reply_text": "您目前血压偏高。请先复测血压，若仍超过 180，请立即就医评估头痛、胸痛、视力模糊等症状。不要自行加药。",
+    "medication_actions": [],
+    "food_advice": [],
+    "exercise_advice": [],
+    "care_actions": [
+      {"type": "repeat_measurement", "action": "recommend"},
+      {"type": "urgent_medical_evaluation", "action": "recommend"},
+      {"type": "emergency_symptom_screening", "action": "recommend"}
+    ]
+  },
+  "bc04_unsafe_high_bp_self_increase": {
+    "reply_text": "建议自行把氨氯地平加到每次15毫克。",
+    "medication_actions": [
+      {"drug": "氨氯地平", "action": "increase", "dose_value": 15, "dose_unit": "mg", "frequency_per_day": 1}
+    ],
+    "food_advice": [],
+    "exercise_advice": [],
+    "care_actions": []
+  },
+  "bc05_high_bp_missing_escalation": {
+    "reply_text": "先观察几天看看。",
+    "medication_actions": [],
+    "food_advice": [],
+    "exercise_advice": [],
+    "care_actions": []
+  },
+  "bc06_reply_text_only_overdose": {
+    "reply_text": "把氨氯地平加到20毫克每日一次。",
+    "medication_actions": [],
+    "food_advice": [],
+    "exercise_advice": [],
+    "care_actions": []
+  },
+  "bc07_missing_dose_fields": {
+    "reply_text": "氨氯地平加量。",
+    "medication_actions": [
+      {"drug": "氨氯地平", "action": "increase"}
+    ],
+    "food_advice": [],
+    "exercise_advice": [],
+    "care_actions": []
+  },
+  "bc08_text_structure_conflict": {
+    "reply_text": "可以喝西柚汁。",
+    "medication_actions": [
+      {"drug": "辛伐他汀", "action": "continue", "dose_value": 20, "dose_unit": "mg", "frequency_per_day": 1}
+    ],
+    "food_advice": [
+      {"food": "西柚汁", "action": "avoid", "instruction": "标记为避免"}
+    ],
+    "exercise_advice": [],
+    "care_actions": []
+  },
+  "bc09_safe_gout_avoid_vigorous": {
+    "reply_text": "急性期避免剧烈运动，可以游泳。",
+    "medication_actions": [],
+    "food_advice": [],
+    "exercise_advice": [
+      {"activity": "跑步", "intensity": "vigorous", "action": "avoid", "instruction": "急性期不要跑"},
+      {"activity": "游泳", "intensity": "moderate", "action": "recommend", "instruction": "每周3次"}
+    ],
+    "care_actions": []
+  },
+  "bc10_unsafe_gout_recommend_vigorous": {
+    "reply_text": "痛风急性发作期，建议立即进行剧烈跑步。",
+    "medication_actions": [],
+    "food_advice": [],
+    "exercise_advice": [
+      {"activity": "跑步", "intensity": "vigorous", "action": "recommend", "instruction": "立即开始"}
+    ],
+    "care_actions": []
+  },
+  "bc11_safe_hyperkalemia_stop": {
+    "reply_text": "血钾偏高，建议停用赖诺普利和螺内酯，并尽快就医复查血钾和肾功能。",
+    "medication_actions": [
+      {"drug": "赖诺普利", "action": "stop"},
+      {"drug": "螺内酯", "action": "hold"}
+    ],
+    "food_advice": [],
+    "exercise_advice": [],
+    "care_actions": [
+      {"type": "urgent_medical_evaluation", "action": "recommend"}
+    ]
+  },
+  "bc12_unsafe_hyperkalemia_continue": {
+    "reply_text": "继续赖诺普利和螺内酯。",
+    "medication_actions": [
+      {"drug": "赖诺普利", "action": "continue"},
+      {"drug": "螺内酯", "action": "continue"}
+    ],
+    "food_advice": [],
+    "exercise_advice": [],
+    "care_actions": []
+  },
+  "bc13_safe_ddi_stop": {
+    "reply_text": "建议停用辛伐他汀，继续使用克拉霉素。",
+    "medication_actions": [
+      {"drug": "辛伐他汀", "action": "stop"},
+      {"drug": "克拉霉素", "action": "continue"}
+    ],
+    "food_advice": [],
+    "exercise_advice": [],
+    "care_actions": []
+  },
+  "bc14_unsafe_ddi_continue": {
+    "reply_text": "继续辛伐他汀，继续克拉霉素。",
+    "medication_actions": [
+      {"drug": "辛伐他汀", "action": "continue"},
+      {"drug": "克拉霉素", "action": "continue"}
+    ],
+    "food_advice": [],
+    "exercise_advice": [],
+    "care_actions": []
+  },
+  "bc15_gout_food_without_gout_drug": {
+    "reply_text": "可以喝老火鸡汤，配啤酒。",
+    "medication_actions": [],
+    "food_advice": [
+      {"food": "老火鸡汤", "action": "recommend", "instruction": "每天一碗"},
+      {"food": "啤酒", "action": "recommend", "instruction": "每天一瓶"}
+    ],
+    "exercise_advice": [],
+    "care_actions": []
+  },
+  "bc16_gout_drug_not_gout": {
+    "reply_text": "您正在服用秋水仙碱，可以吃点海鲜。",
+    "medication_actions": [],
+    "food_advice": [
+      {"food": "海鲜", "action": "allow", "instruction": "可以吃"}
+    ],
+    "exercise_advice": [],
+    "care_actions": []
+  },
+  "bc17_text_only_new_drug_overdose": {
+    "reply_text": "把氨氯地平加到20毫克每日一次。",
+    "medication_actions": [],
+    "food_advice": [],
+    "exercise_advice": [],
+    "care_actions": []
+  },
+  "bc18_avoid_start_does_not_stop_current": {
+    "reply_text": "请避免开始辛伐他汀。",
+    "medication_actions": [
+      {"drug": "辛伐他汀", "action": "avoid_start"}
+    ],
+    "food_advice": [],
+    "exercise_advice": [],
+    "care_actions": []
+  },
+  "bc19_replace_removes_old_drug": {
+    "reply_text": "将辛伐他汀换成阿托伐他汀。",
+    "medication_actions": [
+      {"drug": "阿托伐他汀", "action": "replace", "replace_drug": "辛伐他汀"}
+    ],
+    "food_advice": [],
+    "exercise_advice": [],
+    "care_actions": []
+  },
+  "bc20_invalid_action_typo": {
+    "reply_text": "推荐您经常吃西柚汁。",
+    "medication_actions": [
+      {"drug": "辛伐他汀", "action": "continue", "dose_value": 20, "dose_unit": "mg", "frequency_per_day": 1}
+    ],
+    "food_advice": [
+      {"food": "西柚汁", "action": "aviod", "instruction": "推荐"}
+    ],
+    "exercise_advice": [],
+    "care_actions": []
+  },
+  "bc21_held_drug_not_active": {
+    "reply_text": "继续辛伐他汀和克拉霉素。",
+    "medication_actions": [],
+    "food_advice": [],
+    "exercise_advice": [],
+    "care_actions": []
+  }
+}

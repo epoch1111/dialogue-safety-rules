@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "$id": "https://dialogue-safety.example.com/schemas/audit_input.schema.json",
+  "title": "DialogueSafetyAuditInput",
+  "description": "Top-level audit input envelope for dialogue-safety-rules v4.2.0.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "patient_state", "dialogue_output"],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "description": "Strict input schema version. Missing or unsupported values force REVIEW.",
+      "pattern": "^\\d+\\.\\d+$"
+    },
+    "patient_state": {
+      "$ref": "patient_state.schema.json"
+    },
+    "dialogue_output": {
+      "$ref": "dialogue_output.schema.json"
+    }
+  }
+}

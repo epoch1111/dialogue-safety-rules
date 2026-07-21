@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dialogue Agent Safety Audit · v4.2.0</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">⚖️</span>
+      <div>
+        <div class="brand-title">Dialogue Agent Safety Audit</div>
+        <div class="brand-sub">v4.2.0 · 严格输入契约 + 必要上下文 + 确定性规则</div>
+      </div>
+    </div>
+    <div class="topbar-status">
+      <span id="health-indicator" class="badge badge-neutral">连接中…</span>
+      <span id="ruleset-indicator" class="badge badge-info">ruleset: --</span>
+    </div>
+  </header>
+
+  <main class="layout">
+
+    <!-- ===== LEFT: INPUT ===== -->
+    <section class="col col-input">
+      <h2 class="col-title">📥 输入</h2>
+
+      <div class="panel">
+        <label class="lbl">场景预设</label>
+        <select id="scenario-select" class="select"></select>
+        <p class="hint" id="scenario-summary"></p>
+      </div>
+
+      <div class="panel">
+        <label class="lbl" for="patient-state">患者病历 <code>patient_state</code></label>
+        <textarea id="patient-state" class="json-input" rows="14"
+                  spellcheck="false"></textarea>
+      </div>
+
+      <div class="panel">
+        <label class="lbl" for="dialogue-output">Dialogue Agent 输出 <code>dialogue_output</code></label>
+        <textarea id="dialogue-output" class="json-input" rows="18"
+                  spellcheck="false"></textarea>
+      </div>
+
+      <button id="run-btn" class="btn-primary">▶ 提交审计</button>
+      <button id="reset-btn" class="btn-secondary">↺ 清空</button>
+      <p class="small">提示：引擎只接收 <code>patient_state</code> 和 <code>dialogue_output</code>。<strong>不会</strong>传入任何期望结果。</p>
+    </section>
+
+    <!-- ===== MIDDLE: TRACE ===== -->
+    <section class="col col-trace">
+      <h2 class="col-title">🔍 审计追踪</h2>
+      <div id="trace" class="trace">
+        <p class="hint hint-big">点击「提交审计」后这里会显示逐步诊断。</p>
+      </div>
+    </section>
+
+    <!-- ===== RIGHT: OUTPUT ===== -->
+    <section class="col col-output">
+      <h2 class="col-title">📤 输出</h2>
+
+      <div class="panel">
+        <div class="decision-label">最终结论</div>
+        <div id="decision-card" class="decision-card decision-unknown">
+          <div class="decision-text" id="decision-text">—</div>
+          <div class="decision-rule" id="decision-rule"></div>
+        </div>
+        <div class="decision-basis" id="decision-basis"></div>
+      </div>
+
+      <div class="panel">
+        <label class="lbl">真正发送给患者的内容</label>
+        <div id="visible-response" class="visible-response">—</div>
+      </div>
+
+      <div class="panel">
+        <label class="lbl">复核提示 reviewer_message</label>
+        <div id="reviewer-message" class="visible-response">—</div>
+      </div>
+
+      <div class="panel">
+        <label class="lbl">原始 LLM 回复是否发送？</label>
+        <div id="original-sent" class="big-flag">—</div>
+      </div>
+
+      <div class="panel">
+        <label class="lbl">输入校验 (input_validation_errors)</label>
+        <ul id="ive-list" class="violations"></ul>
+      </div>
+
+      <div class="panel">
+        <label class="lbl">必要上下文缺失 (missing_context_fields)</label>
+        <ul id="missing-list" class="violations"></ul>
+      </div>
+
+      <div class="panel">
+        <label class="lbl">一致性违规 (consistency_violations)</label>
+        <ul id="cons-list" class="violations"></ul>
+      </div>
+
+      <div class="panel">
+        <label class="lbl">医学命中 (medical_violations)</label>
+        <ul id="med-list" class="violations"></ul>
+      </div>
+
+      <div class="panel">
+        <label class="lbl">标准化 patient_state</label>
+        <pre id="normalized-patient-state" class="raw-json">(尚未提交)</pre>
+      </div>
+
+      <div class="panel">
+        <label class="lbl">药物上下文 DrugContext</label>
+        <pre id="drug-context" class="raw-json">(尚未提交)</pre>
+      </div>
+
+      <div class="panel">
+        <label class="lbl">候选 / 评估 / 通道</label>
+        <table class="kv-table">
+          <tbody>
+            <tr><th>candidate_rule_ids</th><td><pre id="candidate-rule-ids"></pre></td></tr>
+            <tr><th>evaluated_rule_ids</th><td><pre id="evaluated-rule-ids"></pre></td></tr>
+            <tr><th>retrieval_channels</th><td><pre id="retrieval-channels"></pre></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="panel">
+        <label class="lbl">耗时 timing (ms)</label>
+        <table id="timing-table" class="timing-table">
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="panel raw-json-panel">
+        <label class="lbl">📦 原始 JSON</label>
+        <details>
+          <summary>展开 / 折叠</summary>
+          <pre id="raw-json" class="raw-json">(尚未提交审计)</pre>
+        </details>
+      </div>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

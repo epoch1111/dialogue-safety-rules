@@ -1,0 +1,154 @@
+{
+  "rules": [
+    {
+      "id": "PR001_SEVERE_HYPERTENSION",
+      "version": 2,
+      "status": "active",
+      "type": "patient_risk",
+      "severity": "REVIEW",
+      "triggers": {
+        "patient_fields_any": ["latest_systolic_bp_mmHg"],
+        "drugs_any": ["amlodipine", "lisinopril", "ramipril", "irbesartan"]
+      },
+      "parameters": {
+        "risk_code": "severe_hypertension",
+        "field": "latest_systolic_bp_mmHg",
+        "operator": "gt",
+        "threshold": 180,
+        "applies_drugs": ["amlodipine", "lisinopril", "ramipril", "irbesartan"]
+      },
+      "message": "患者当前收缩压 > 180 mmHg，属高血压急症范围。",
+      "source": {
+        "document_title": "中国高血压防治指南（2024年修订版）",
+        "document_version": "2024",
+        "section": "高血压急症",
+        "evidence_text": "收缩压 > 180 mmHg 和/或舒张压 > 120 mmHg 属高血压急症。"
+      }
+    },
+    {
+      "id": "PR002_HYPOGLYCEMIA",
+      "version": 2,
+      "status": "active",
+      "type": "patient_risk",
+      "severity": "REVIEW",
+      "triggers": {
+        "patient_fields_any": ["latest_glucose_mmol_l"],
+        "drugs_any": ["insulin"]
+      },
+      "parameters": {
+        "risk_code": "hypoglycemia",
+        "field": "latest_glucose_mmol_l",
+        "operator": "lt",
+        "threshold": 3.9,
+        "applies_drugs": ["insulin"]
+      },
+      "message": "患者血糖 < 3.9 mmol/L，存在低血糖风险。",
+      "source": {
+        "document_title": "中国2型糖尿病运动治疗指南（2024版）",
+        "document_version": "2024",
+        "section": "运动前血糖评估",
+        "evidence_text": "血糖低于 3.9 mmol/L 提示低血糖。"
+      }
+    },
+    {
+      "id": "PR003_HYPERKALEMIA",
+      "version": 2,
+      "status": "active",
+      "type": "patient_risk",
+      "severity": "REVIEW",
+      "triggers": {
+        "patient_fields_any": ["serum_potassium_mmol_l"],
+        "drugs_any": ["lisinopril", "spironolactone", "ramipril", "irbesartan"]
+      },
+      "parameters": {
+        "risk_code": "hyperkalemia",
+        "field": "serum_potassium_mmol_l",
+        "operator": "gt",
+        "threshold": 5.0,
+        "applies_drugs": ["lisinopril", "spironolactone", "ramipril", "irbesartan"]
+      },
+      "message": "患者血钾 > 5.0 mmol/L，存在高钾血症风险。",
+      "source": {
+        "document_title": "国家基层高血压防治管理指南（2025版）",
+        "document_version": "2025",
+        "section": "联合用药监测",
+        "evidence_text": "ACEI/ARB 或螺内酯使用期间血钾 > 5.0 mmol/L 应减量或停药。"
+      }
+    },
+    {
+      "id": "PR004_ACUTE_GOUT_FLARE",
+      "version": 2,
+      "status": "active",
+      "type": "patient_risk",
+      "severity": "REVIEW",
+      "triggers": {
+        "patient_fields_any": ["gout_acute_flare"],
+        "drugs_any": []
+      },
+      "parameters": {
+        "risk_code": "acute_gout_flare",
+        "field": "gout_acute_flare",
+        "operator": "eq",
+        "threshold": 1,
+        "applies_drugs": []
+      },
+      "message": "患者正处于痛风急性发作期。",
+      "source": {
+        "document_title": "痛风抗炎症治疗指南（2025版）",
+        "document_version": "2025",
+        "section": "急性期抗炎",
+        "evidence_text": "急性发作期需要控制炎症和避免诱因。"
+      }
+    },
+    {
+      "id": "PR005_HYPERURICEMIA_GOUT",
+      "version": 2,
+      "status": "active",
+      "type": "patient_risk",
+      "severity": "WARN",
+      "triggers": {
+        "patient_fields_any": ["disease_codes"],
+        "drugs_any": []
+      },
+      "parameters": {
+        "risk_code": "hyperuricemia_gout",
+        "field": "disease_codes",
+        "operator": "contains",
+        "threshold": "hyperuricemia_gout",
+        "applies_drugs": []
+      },
+      "message": "患者存在高尿酸血症/痛风诊断。",
+      "source": {
+        "document_title": "中国高尿酸血症与痛风诊疗指南（2019）",
+        "document_version": "2019",
+        "section": "诊断",
+        "evidence_text": "确诊高尿酸血症/痛风的患者需要低嘌呤饮食。"
+      }
+    },
+    {
+      "id": "PR006_DYSLIPIDEMIA",
+      "version": 2,
+      "status": "active",
+      "type": "patient_risk",
+      "severity": "WARN",
+      "triggers": {
+        "patient_fields_any": ["disease_codes"],
+        "drugs_any": []
+      },
+      "parameters": {
+        "risk_code": "dyslipidemia",
+        "field": "disease_codes",
+        "operator": "contains",
+        "threshold": "dyslipidemia",
+        "applies_drugs": []
+      },
+      "message": "患者存在血脂异常诊断。",
+      "source": {
+        "document_title": "中国血脂管理指南（2023年）",
+        "document_version": "2023",
+        "section": "诊断",
+        "evidence_text": "高脂血症/血脂异常需要限制饱和脂肪与反式脂肪。"
+      }
+    }
+  ]
+}

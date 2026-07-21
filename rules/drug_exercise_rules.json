@@ -1,0 +1,97 @@
+{
+  "rules": [
+    {
+      "id": "R005_INSULIN_LOW_GLUCOSE_VIGOROUS_EXERCISE",
+      "version": 2,
+      "status": "active",
+      "type": "drug_exercise",
+      "severity": "BLOCK",
+      "triggers": {
+        "drugs_any": ["insulin"],
+        "keywords_any": ["vigorous"]
+      },
+      "parameters": {
+        "drugs": ["insulin"],
+        "field": "latest_glucose_mmol_l",
+        "operator": "lt",
+        "threshold": 3.9,
+        "exercise_intensity": "vigorous"
+      },
+      "message": "患者使用胰岛素且当前血糖低于 3.9 mmol/L，不能直接建议立即进行剧烈运动。",
+      "source": {
+        "document_title": "中国2型糖尿病运动治疗指南（2024版）",
+        "document_version": "2024"
+      }
+    },
+    {
+      "id": "R025_INSULIN_GLUCOSE_HIGH_VIGOROUS",
+      "version": 2,
+      "status": "active",
+      "type": "drug_exercise",
+      "severity": "REVIEW",
+      "triggers": {
+        "drugs_any": ["insulin"],
+        "keywords_any": ["vigorous"]
+      },
+      "parameters": {
+        "drugs": ["insulin"],
+        "field": "latest_glucose_mmol_l",
+        "operator": "gt",
+        "threshold": 14.0,
+        "exercise_intensity": "vigorous"
+      },
+      "message": "血糖 > 14.0 mmol/L 时剧烈运动可能加重高血糖与酮症风险。",
+      "source": {
+        "document_title": "中国2型糖尿病运动治疗指南（2024版）",
+        "document_version": "2024"
+      }
+    },
+    {
+      "id": "R026_HYPERTENSION_VIGOROUS_EXERCISE",
+      "version": 2,
+      "status": "active",
+      "type": "drug_exercise",
+      "severity": "BLOCK",
+      "triggers": {
+        "drugs_any": ["amlodipine", "lisinopril", "ramipril", "irbesartan"],
+        "keywords_any": ["vigorous"]
+      },
+      "parameters": {
+        "drugs": ["amlodipine", "lisinopril", "ramipril", "irbesartan"],
+        "field": "latest_systolic_bp_mmHg",
+        "operator": "gt",
+        "threshold": 160,
+        "exercise_intensity": "vigorous"
+      },
+      "message": "收缩压 > 160 mmHg 时不建议立即进行剧烈运动。",
+      "source": {
+        "document_title": "心血管运动医学指南（2024）",
+        "document_version": "2024"
+      }
+    },
+    {
+      "id": "R027_GOUT_VIGOROUS_EXERCISE",
+      "version": 2,
+      "status": "deprecated",
+      "type": "drug_exercise",
+      "severity": "BLOCK",
+      "triggers": {
+        "drugs_any": ["colchicine", "allopurinol", "febuxostat", "benzbromarone"],
+        "keywords_any": ["vigorous"]
+      },
+      "parameters": {
+        "drugs": ["colchicine", "allopurinol", "febuxostat", "benzbromarone"],
+        "operator": "eq",
+        "threshold": 0,
+        "exercise_intensity": "vigorous"
+      },
+      "message": "[deprecated] 痛风用药 + 剧烈运动 (v4 不再仅因痛风药禁止)。",
+      "source": {
+        "document_title": "n/a",
+        "document_version": "n/a",
+        "section": "",
+        "evidence_text": "v4: 这种绝对禁止应改由 disease_exercise 在急性发作时判断。"
+      }
+    }
+  ]
+}

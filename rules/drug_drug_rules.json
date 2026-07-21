@@ -1,0 +1,118 @@
+{
+  "rules": [
+    {
+      "id": "R003_SIMVASTATIN_CLARITHROMYCIN",
+      "version": 3,
+      "status": "active",
+      "type": "drug_drug",
+      "severity": "BLOCK",
+      "triggers": {
+        "drugs_any": ["simvastatin", "clarithromycin"]
+      },
+      "parameters": {
+        "drug_a": "simvastatin",
+        "drug_b": "clarithromycin"
+      },
+      "message": "检测到辛伐他汀与克拉霉素联用风险（横纹肌溶解）。",
+      "source": {
+        "document_title": "中国血脂管理指南（2023年）",
+        "document_version": "2023"
+      }
+    },
+    {
+      "id": "R017_ATORVASTATIN_CLARITHROMYCIN",
+      "version": 3,
+      "status": "active",
+      "type": "drug_drug",
+      "severity": "REVIEW",
+      "triggers": {
+        "drugs_any": ["atorvastatin", "clarithromycin"]
+      },
+      "parameters": {
+        "drug_a": "atorvastatin",
+        "drug_b": "clarithromycin"
+      },
+      "message": "阿托伐他汀与克拉霉素联用，需医生评估剂量或换药。",
+      "source": {
+        "document_title": "中国血脂管理指南（2023年）",
+        "document_version": "2023"
+      }
+    },
+    {
+      "id": "R018_COLCHICINE_CLARITHROMYCIN",
+      "version": 3,
+      "status": "active",
+      "type": "drug_drug",
+      "severity": "BLOCK",
+      "triggers": {
+        "drugs_any": ["colchicine", "clarithromycin"]
+      },
+      "parameters": {
+        "drug_a": "colchicine",
+        "drug_b": "clarithromycin"
+      },
+      "message": "克拉霉素抑制 CYP3A4，秋水仙碱血药浓度升高，可能致命中毒。",
+      "source": {
+        "document_title": "痛风抗炎症治疗指南（2025版）",
+        "document_version": "2025"
+      }
+    },
+    {
+      "id": "R019_IBUPROFEN_LISINOPRIL",
+      "version": 3,
+      "status": "active",
+      "type": "drug_drug",
+      "severity": "REVIEW",
+      "triggers": {
+        "drugs_any": ["ibuprofen", "lisinopril"]
+      },
+      "parameters": {
+        "drug_a": "ibuprofen",
+        "drug_b": "lisinopril"
+      },
+      "message": "布洛芬与赖诺普利联用可能削弱降压效果并增加肾损伤风险。",
+      "source": {
+        "document_title": "国家基层高血压防治管理指南（2025版）",
+        "document_version": "2025"
+      }
+    },
+    {
+      "id": "R019_CELECOXIB_LISINOPRIL",
+      "version": 3,
+      "status": "active",
+      "type": "drug_drug",
+      "severity": "REVIEW",
+      "triggers": {
+        "drugs_any": ["celecoxib", "lisinopril"]
+      },
+      "parameters": {
+        "drug_a": "celecoxib",
+        "drug_b": "lisinopril"
+      },
+      "message": "塞来昔布与赖诺普利联用可能削弱降压效果并增加肾损伤风险。",
+      "source": {
+        "document_title": "国家基层高血压防治管理指南（2025版）",
+        "document_version": "2025"
+      }
+    },
+    {
+      "id": "R019_ETORICOXIB_LISINOPRIL",
+      "version": 3,
+      "status": "active",
+      "type": "drug_drug",
+      "severity": "REVIEW",
+      "triggers": {
+        "drugs_any": ["etoricoxib", "lisinopril"]
+      },
+      "parameters": {
+        "drug_a": "etoricoxib",
+        "drug_b": "lisinopril"
+      },
+      "message": "依托考昔与赖诺普利联用可能削弱降压效果并增加肾损伤风险。",
+      "source": {
+        "document_title": "国家基层高血压防治管理指南（2025版）",
+        "document_version": "2025"
+      }
+    }
+  ]
+}

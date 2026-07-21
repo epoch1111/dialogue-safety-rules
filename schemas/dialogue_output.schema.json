@@ -1,0 +1,138 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "$id": "https://dialogue-safety.example.com/schemas/dialogue_output.schema.json",
+  "title": "DialogueOutput",
+  "description": "Strict Dialogue Agent output for dialogue-safety-rules v4.2.0.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "reply_text",
+    "medication_actions",
+    "food_advice",
+    "exercise_advice",
+    "care_actions",
+    "requires_review",
+    "uncertainty_reasons"
+  ],
+  "properties": {
+    "reply_text": {
+      "type": "string",
+      "description": "Patient-visible natural language reply. Required even when empty."
+    },
+    "medication_actions": {
+      "type": "array",
+      "items": {"$ref": "#/definitions/medication_action"}
+    },
+    "food_advice": {
+      "type": "array",
+      "items": {"$ref": "#/definitions/food_advice"}
+    },
+    "exercise_advice": {
+      "type": "array",
+      "items": {"$ref": "#/definitions/exercise_advice"}
+    },
+    "care_actions": {
+      "type": "array",
+      "items": {"$ref": "#/definitions/care_action"}
+    },
+    "requires_review": {
+      "type": "boolean",
+      "description": "LLM self-reported uncertainty flag; does not bypass engine checks."
+    },
+    "uncertainty_reasons": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1}
+    }
+  },
+  "definitions": {
+    "medication_action": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["drug_id", "drug_name", "action"],
+      "properties": {
+        "drug_id": {"type": "string", "minLength": 1},
+        "drug_name": {"type": "string", "minLength": 1},
+        "action": {
+          "type": "string",
+          "enum": ["start", "continue", "increase", "decrease", "stop", "hold", "avoid_start", "replace"]
+        },
+        "dose_value": {"type": "number", "minimum": 0},
+        "dose_unit": {
+          "type": "string",
+          "enum": ["mcg", "mg", "g", "IU"]
+        },
+        "frequency_per_day": {"type": "number", "exclusiveMinimum": 0},
+        "route": {
+          "type": "string",
+          "enum": ["oral", "iv", "im", "sc", "inhale", "topical", "other"]
+        },
+        "duration_days": {"type": "integer", "minimum": 0},
+        "use_current_regimen": {"type": "boolean"},
+        "replace_drug_id": {"type": ["string", "null"]},
+        "replace_drug_name": {"type": ["string", "null"]}
+      }
+    },
+    "food_advice": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["food_concept_id", "food_name", "action"],
+      "properties": {
+        "food_concept_id": {"type": "string", "minLength": 1},
+        "food_name": {"type": "string", "minLength": 1},
+        "action": {
+          "type": "string",
+          "enum": ["recommend", "allow", "limit", "avoid"]
+        },
+        "amount": {"type": ["number", "null"]},
+        "frequency": {"type": ["string", "null"]},
+        "instruction": {"type": "string"}
+      }
+    },
+    "exercise_advice": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["activity_concept_id", "activity_name", "intensity", "action"],
+      "properties": {
+        "activity_concept_id": {"type": "string", "minLength": 1},
+        "activity_name": {"type": "string", "minLength": 1},
+        "intensity": {
+          "type": "string",
+          "enum": ["light", "moderate", "vigorous"]
+        },
+        "action": {
+          "type": "string",
+          "enum": ["recommend", "allow", "limit", "avoid", "stop"]
+        },
+        "duration_min": {"type": ["integer", "null"], "minimum": 0},
+        "frequency_per_week": {"type": ["integer", "null"], "minimum": 0},
+        "instruction": {"type": "string"}
+      }
+    },
+    "care_action": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "target", "action"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "repeat_measurement",
+            "urgent_medical_evaluation",
+            "emergency_symptom_screening",
+            "monitor",
+            "follow_up"
+          ]
+        },
+        "target": {"type": "string"},
+        "action": {
+          "type": "string",
+          "enum": ["recommend", "perform"]
+        },
+        "urgency": {
+          "type": ["string", "null"],
+          "enum": ["immediate", "same_day", "within_24h", "routine", null]
+        }
+      }
+    }
+  }
+}

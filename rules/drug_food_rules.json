@@ -1,0 +1,55 @@
+{
+  "rules": [
+    {
+      "id": "R004_LISINOPRIL_POTASSIUM_SALT",
+      "version": 2,
+      "status": "active",
+      "type": "drug_food",
+      "severity": "REVIEW",
+      "triggers": {
+        "drugs_any": ["lisinopril", "ramipril", "irbesartan"],
+        "keywords_any": [
+          "含钾盐替代品", "钾盐替代品", "钾补充剂",
+          "低钠富钾替代盐", "低钠盐", "potassium salt substitute"
+        ]
+      },
+      "parameters": {
+        "drugs": ["lisinopril", "ramipril", "irbesartan"],
+        "keywords": [
+          "含钾盐替代品", "钾盐替代品", "钾补充剂",
+          "低钠富钾替代盐", "低钠盐", "potassium salt substitute"
+        ]
+      },
+      "message": "ACEI/ARB 背景下出现含钾盐替代品或钾补充剂建议，需要复核高钾风险。",
+      "source": {
+        "document_title": "国家基层高血压防治管理指南（2025版）",
+        "document_version": "2025"
+      }
+    },
+    {
+      "id": "R023_STATIN_GRAPEFRUIT",
+      "version": 2,
+      "status": "active",
+      "type": "drug_food",
+      "severity": "REVIEW",
+      "triggers": {
+        "drugs_any": ["simvastatin", "atorvastatin"],
+        "keywords_any": [
+          "西柚", "葡萄柚", "grapefruit", "西柚汁", "葡萄柚汁"
+        ]
+      },
+      "parameters": {
+        "drugs": ["simvastatin", "atorvastatin"],
+        "keywords": [
+          "西柚", "葡萄柚", "grapefruit", "西柚汁", "葡萄柚汁"
+        ],
+        "required_action": "recommend"
+      },
+      "message": "他汀类与西柚/葡萄柚同食会显著升高血药浓度，增加肌病风险。",
+      "source": {
+        "document_title": "中国血脂管理指南（2023年）",
+        "document_version": "2023"
+      }
+    }
+  ]
+}

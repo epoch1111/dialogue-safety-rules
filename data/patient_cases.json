@@ -1,0 +1,120 @@
+{
+  "unsafe_case": {
+    "patient_id": "P001",
+    "egfr": 24,
+    "latest_glucose_mmol_l": 3.4,
+    "current_medications": [
+      {"drug_id": "lisinopril", "drug_name": "赖诺普利", "status": "active"},
+      {"drug_id": "clarithromycin", "drug_name": "克拉霉素", "status": "active"},
+      {"drug_id": "insulin", "drug_name": "甘精胰岛素", "status": "active"}
+    ]
+  },
+  "review_only_case": {
+    "patient_id": "P002",
+    "egfr": 78,
+    "latest_glucose_mmol_l": 6.2,
+    "current_medications": [
+      {"drug_id": "lisinopril", "drug_name": "赖诺普利", "status": "active"}
+    ]
+  },
+  "safe_case": {
+    "patient_id": "P003",
+    "egfr": 88,
+    "latest_glucose_mmol_l": 6.8,
+    "latest_systolic_bp_mmHg": 120,
+    "serum_potassium_mmol_l": 4.2,
+    "current_medications": []
+  },
+  "gout_acute_case": {
+    "patient_id": "P004",
+    "egfr": 75,
+    "serum_potassium_mmol_l": 4.2,
+    "gout_acute_flare": 1,
+    "kidney_stone_history": 0,
+    "has_chd": 0,
+    "latest_systolic_bp_mmHg": 130,
+    "current_medications": [
+      {"drug_id": "colchicine", "drug_name": "秋水仙碱", "status": "active"},
+      {"drug_id": "allopurinol", "drug_name": "别嘌醇", "status": "active"}
+    ]
+  },
+  "gout_high_purine_case": {
+    "patient_id": "P005",
+    "egfr": 80,
+    "latest_glucose_mmol_l": 6.0,
+    "latest_systolic_bp_mmHg": 120,
+    "disease_codes": ["hyperuricemia_gout"],
+    "current_medications": []
+  },
+  "hypertensive_emergency_case": {
+    "patient_id": "P006",
+    "egfr": 70,
+    "latest_systolic_bp_mmHg": 195,
+    "current_medications": [
+      {"drug_id": "amlodipine", "drug_name": "氨氯地平", "status": "active"}
+    ]
+  },
+  "high_potassium_case": {
+    "patient_id": "P007",
+    "egfr": 55,
+    "serum_potassium_mmol_l": 5.7,
+    "latest_systolic_bp_mmHg": 150,
+    "current_medications": [
+      {"drug_id": "lisinopril", "drug_name": "赖诺普利", "status": "active"},
+      {"drug_id": "spironolactone", "drug_name": "螺内酯", "status": "active"}
+    ]
+  },
+  "statin_antibiotic_case": {
+    "patient_id": "P008",
+    "egfr": 90,
+    "latest_systolic_bp_mmHg": 130,
+    "current_medications": [
+      {"drug_id": "simvastatin", "drug_name": "辛伐他汀", "status": "active"},
+      {"drug_id": "clarithromycin", "drug_name": "克拉霉素", "status": "active"}
+    ]
+  },
+  "colchicine_renal_impairment_case": {
+    "patient_id": "P009",
+    "egfr": 22,
+    "latest_systolic_bp_mmHg": 130,
+    "current_medications": [
+      {"drug_id": "colchicine", "drug_name": "秋水仙碱", "status": "active"}
+    ]
+  },
+  "aspirin_safe_low_dose_case": {
+    "patient_id": "P010",
+    "egfr": 85,
+    "latest_systolic_bp_mmHg": 120,
+    "current_medications": [
+      {"drug_id": "aspirin", "drug_name": "阿司匹林", "status": "active"}
+    ]
+  },
+  "metformin_moderate_egfr_case": {
+    "patient_id": "P011",
+    "egfr": 42,
+    "latest_glucose_mmol_l": 7.0,
+    "latest_systolic_bp_mmHg": 130,
+    "current_medications": [
+      {"drug_id": "metformin", "drug_name": "二甲双胍", "status": "active"}
+    ]
+  },
+  "dyslipidemia_case": {
+    "patient_id": "P012",
+    "egfr": 88,
+    "latest_glucose_mmol_l": 6.0,
+    "latest_systolic_bp_mmHg": 120,
+    "disease_codes": ["dyslipidemia"],
+    "current_medications": [
+      {"drug_id": "atorvastatin", "drug_name": "阿托伐他汀", "status": "active"}
+    ]
+  },
+  "gout_drug_only_case": {
+    "patient_id": "P013",
+    "egfr": 80,
+    "latest_glucose_mmol_l": 6.0,
+    "latest_systolic_bp_mmHg": 120,
+    "current_medications": [
+      {"drug_id": "colchicine", "drug_name": "秋水仙碱", "status": "active"}
+    ]
+  }
+}

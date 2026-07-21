@@ -1,0 +1,118 @@
+{
+  "rules": [
+    {
+      "id": "R002_METFORMIN_EGFR_LT_30",
+      "version": 3,
+      "status": "active",
+      "type": "patient_state",
+      "severity": "BLOCK",
+      "triggers": {
+        "drugs_any": ["metformin"],
+        "patient_fields_any": ["egfr"]
+      },
+      "parameters": {
+        "drugs": ["metformin"],
+        "field": "egfr",
+        "operator": "lt",
+        "threshold": 30,
+        "unit": "mL/min/1.73m2"
+      },
+      "message": "患者 eGFR < 30，不能直接给出新增或继续二甲双胍的建议。",
+      "source": {
+        "document_title": "中国糖尿病防治指南（2024版）",
+        "document_version": "2024",
+        "section": "降糖药选择"
+      }
+    },
+    {
+      "id": "R010_METFORMIN_EGFR_30_TO_45",
+      "version": 3,
+      "status": "active",
+      "type": "patient_state",
+      "severity": "REVIEW",
+      "triggers": {
+        "drugs_any": ["metformin"],
+        "patient_fields_any": ["egfr"]
+      },
+      "parameters": {
+        "drugs": ["metformin"],
+        "range": {
+          "field": "egfr",
+          "gte": 30,
+          "lt": 45
+        }
+      },
+      "message": "患者 30 <= eGFR < 45，二甲双胍需要减量或停药评估。",
+      "source": {
+        "document_title": "中国糖尿病防治指南（2024版）",
+        "document_version": "2024"
+      }
+    },
+    {
+      "id": "R011_COLCHICINE_EGFR_LT_30",
+      "version": 3,
+      "status": "active",
+      "type": "patient_state",
+      "severity": "BLOCK",
+      "triggers": {
+        "drugs_any": ["colchicine"],
+        "patient_fields_any": ["egfr"]
+      },
+      "parameters": {
+        "drugs": ["colchicine"],
+        "field": "egfr",
+        "operator": "lt",
+        "threshold": 30
+      },
+      "message": "秋水仙碱在 eGFR < 30 时毒性显著升高，需由医生重新评估剂量。",
+      "source": {
+        "document_title": "痛风抗炎症治疗指南（2025版）",
+        "document_version": "2025"
+      }
+    },
+    {
+      "id": "R012_FEBUXOSTAT_CORONARY_HEART_DISEASE",
+      "version": 3,
+      "status": "active",
+      "type": "patient_state",
+      "severity": "BLOCK",
+      "triggers": {
+        "drugs_any": ["febuxostat"],
+        "patient_fields_any": ["has_chd"]
+      },
+      "parameters": {
+        "drugs": ["febuxostat"],
+        "field": "has_chd",
+        "operator": "eq",
+        "threshold": 1
+      },
+      "message": "冠心病患者不建议使用非布司他，心血管事件风险可能升高。",
+      "source": {
+        "document_title": "痛风的生活处方：与尿酸和解的八大健康法则",
+        "document_version": "2025"
+      }
+    },
+    {
+      "id": "R013_BENZBROMARONE_KIDNEY_STONE_HISTORY",
+      "version": 3,
+      "status": "active",
+      "type": "patient_state",
+      "severity": "BLOCK",
+      "triggers": {
+        "drugs_any": ["benzbromarone"],
+        "patient_fields_any": ["kidney_stone_history"]
+      },
+      "parameters": {
+        "drugs": ["benzbromarone"],
+        "field": "kidney_stone_history",
+        "operator": "eq",
+        "threshold": 1
+      },
+      "message": "苯溴马隆可能增加肾结石风险，患者有肾结石史需禁用。",
+      "source": {
+        "document_title": "痛风的生活处方：与尿酸和解的八大健康法则",
+        "document_version": "2025"
+      }
+    }
+  ]
+}

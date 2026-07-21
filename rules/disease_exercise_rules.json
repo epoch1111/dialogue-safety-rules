@@ -1,0 +1,26 @@
+{
+  "rules": [
+    {
+      "id": "R021_GOUT_ACUTE_VIGOROUS_BLOCK",
+      "version": 2,
+      "status": "active",
+      "type": "disease_exercise",
+      "severity": "BLOCK",
+      "triggers": {
+        "risk_flags_any": ["acute_gout_flare"],
+        "keywords_any": ["vigorous"]
+      },
+      "parameters": {
+        "disease_code": "acute_gout_flare",
+        "exercise_intensity": "vigorous"
+      },
+      "message": "痛风急性发作期不应推荐剧烈运动。",
+      "source": {
+        "document_title": "痛风的生活处方：与尿酸和解的八大健康法则",
+        "document_version": "2025",
+        "section": "处方四 运动疗法",
+        "evidence_text": "剧烈运动可能诱发痛风急性发作。"
+      }
+    }
+  ]
+}
