@@ -539,6 +539,12 @@ class DialogueSafetyEngine:
         report.system_findings = self._collect_system_findings(report)
         report.all_findings = self._collect_all_findings(report)
 
+        # Build the optional `ui_trace` developer artifact. It is
+        # generated ONLY when debug=True so the production path
+        # produces identical reports without the extra payload.
+        if debug:
+            developer_diagnostics["ui_trace"] = self._build_ui_trace(report)
+
         t_log = time.perf_counter()
         self.audit_logger.write(report)
         timing.logging_ms = (time.perf_counter() - t_log) * 1000.0
@@ -846,3 +852,218 @@ class DialogueSafetyEngine:
             d["category"] = "missing_context"
             out.append(d)
         return out
+
+    # ------------------------------------------------------- ui_trace
+
+    def _build_ui_trace(self, report: AuditReport) -> Dict[str, Any]:
+        """Build the per-step visual artifact used by the dashboard.
+
+        Each step's ``status`` is one of: ``pending``, ``running``,
+        ``passed``, ``warning`` (REVIEW), ``blocked`` (BLOCK),
+        ``error``. Every status is derived from the REAL audit
+        artifacts — never from expected_decision or scenario name.
+        """
+        ive = list(report.input_validation_errors)
+        cons = list(report.consistency_violations)
+        meds = list(report.medical_violations)
+        missing = list(report.missing_context_fields)
+        system_findings = list(report.system_findings)
+
+        def status_for_block(has_block_issues: bool,
+                             has_review_issues: bool,
+                             empty_passed: bool) -> str:
+            if has_block_issues:
+                return "blocked"
+            if has_review_issues:
+                return "warning"
+            return "passed" if empty_passed else "passed"
+
+        def high_severity(items) -> bool:
+            return any(getattr(i, "severity", "") == "BLOCK" for i in items)
+
+        def any_review(items) -> bool:
+            return any(getattr(i, "severity", "") in ("REVIEW", "BLOCK")
+                       for i in items)
+
+        # Step 1 — input validation
+        step1 = {
+            "step": 1,
+            "key": "input_validation",
+            "name": "输入校验",
+            "status": status_for_block(high_severity(ive), any_review(ive),
+                                       len(ive) == 0),
+            "summary": ("Schema、类型、枚举、剂量单位、药物 ID ↔ 名称"
+                        "一致性等校验"),
+            "details": [v.to_dict() for v in ive],
+        }
+
+        # Step 2 — normalize
+        norm = (report.developer_diagnostics or {}).get("normalized_draft") or {}
+        step2 = {
+            "step": 2,
+            "key": "normalize",
+            "name": "标准化",
+            "status": "passed",
+            "summary": ("药物 / 食物 / 运动名称标准化，单位换算 "
+                        "(mcg / mg / g → mg)"),
+            "details": {
+                "medication_actions": norm.get("medication_actions", []),
+                "food_advice": norm.get("food_advice", []),
+                "exercise_advice": norm.get("exercise_advice", []),
+                "care_actions": norm.get("care_actions", []),
+            },
+        }
+
+        # Step 3 — DrugContext
+        dc = (report.developer_diagnostics or {}).get("drug_context") or {}
+        step3 = {
+            "step": 3,
+            "key": "drug_context",
+            "name": "构建 DrugContext",
+            "status": "passed",
+            "summary": "current_drugs / recommended / resulting 三列追踪",
+            "details": {
+                "current_drugs": dc.get("current_drugs", []),
+                "recommended_drugs": dc.get("recommended_drugs", []),
+                "resulting_drugs": dc.get("resulting_drugs", []),
+                "mentioned_drugs": dc.get("mentioned_drugs", []),
+                "text_mentioned_drugs": dc.get("text_mentioned_drugs", []),
+                "text_dose_drugs": dc.get("text_dose_drugs", []),
+            },
+        }
+
+        # Step 4 — text parsing (auxiliary)
+        step4 = {
+            "step": 4,
+            "key": "text_parsing",
+            "name": "文本解析（辅助）",
+            "status": "passed",
+            "summary": "仅用于一致性检查和遗漏检测，不是规则判断依据",
+            "details": {
+                "text_extractions": [t.to_dict() for t in report.text_extractions],
+                "text_mentioned_drugs": report.text_mentioned_drugs,
+                "text_dose_drugs": report.text_dose_drugs,
+                "matched_keywords": (report.matched_entities.to_dict()
+                                      if report.matched_entities else {}),
+            },
+        }
+
+        # Step 5 — required context
+        rc = (report.developer_diagnostics or {}).get("required_context") or {}
+        step5 = {
+            "step": 5,
+            "key": "required_context",
+            "name": "必要信息检查",
+            "status": status_for_block(False, bool(missing),
+                                       len(missing) == 0),
+            "summary": ("通过精确 per-channel 索引查询所需患者字段；"
+                        "stop / hold / avoid_start 不触发 drug 安全 "
+                        "required-context 规则"),
+            "details": {
+                "missing_context_fields": missing,
+                "retrieval_trace": (report.developer_diagnostics or {})
+                                       .get("required_context_retrieval_trace",
+                                            []),
+                "is_sufficient": bool(rc.get("is_sufficient")),
+                "total_rules_in_repo": rc.get("total_rules_in_repo", 0),
+                "total_rules_consulted": rc.get("total_rules_consulted", 0),
+                "checked_fields": rc.get("checked_fields", []),
+            },
+        }
+
+        # Step 6 — consistency
+        step6 = {
+            "step": 6,
+            "key": "consistency",
+            "name": "一致性检查",
+            "status": status_for_block(high_severity(cons), any_review(cons),
+                                       len(cons) == 0),
+            "summary": "SYS001..SYS008 + 文本与结构化方向 / 剂量 / "
+                       "药物冲突检查",
+            "details": [v.to_dict() for v in cons],
+        }
+
+        # Step 7 — candidate recall
+        retrieval_trace = list(report.retrieval_trace) if report.retrieval_trace else []
+        step7 = {
+            "step": 7,
+            "key": "candidate_recall",
+            "name": "候选规则召回",
+            "status": "passed",
+            "summary": "8 个精确 per-channel 索引；无 simple_index 兜底",
+            "details": {
+                "channels": list(report.retrieval_channels),
+                "trace": [t.to_dict() if hasattr(t, "to_dict") else t
+                          for t in retrieval_trace],
+                "candidate_rule_ids": list(report.candidate_rule_ids),
+            },
+        }
+
+        # Step 8 — evaluation
+        evals = list(report.evaluation_trace) if report.evaluation_trace else []
+        matched_evaluations = [e for e in evals if getattr(e, "matched", False)]
+        step8_status = status_for_block(
+            any(v.severity == "BLOCK" for v in meds),
+            any(v.severity in ("REVIEW", "BLOCK") for v in meds),
+            len(matched_evaluations) == 0,
+        )
+        step8 = {
+            "step": 8,
+            "key": "evaluation",
+            "name": "规则执行",
+            "status": step8_status,
+            "summary": "每条候选规则按 deterministic 流程评估；"
+                       "matched=True 才进入 medical_violations",
+            "details": {
+                "evaluated_rule_ids": list(report.evaluated_rule_ids),
+                "matched_count": len(matched_evaluations),
+                "evaluations": [
+                    {
+                        "rule_id": e.rule_id,
+                        "type": e.type,
+                        "matched": e.matched,
+                        "severity": e.severity,
+                        "conditions": [c.to_dict() for c in e.conditions],
+                    } for e in evals
+                ],
+                "violations": [v.to_dict() for v in meds],
+            },
+        }
+
+        # Step 9 — result aggregation
+        decision = report.decision or "PASS"
+        step9 = {
+            "step": 9,
+            "key": "aggregate",
+            "name": "结果汇总",
+            "status": {"BLOCK": "blocked", "REVIEW": "warning"}.get(
+                decision, "passed",
+            ),
+            "summary": "BLOCK > REVIEW > PASS；按优先级汇总并产出最终结论",
+            "details": {
+                "decision": decision,
+                "decision_basis": list(report.decision_basis),
+                "counts": {
+                    "input_validation_errors": len(ive),
+                    "missing_context_fields": len(missing),
+                    "consistency_violations": len(cons),
+                    "medical_violations": len(meds),
+                    "system_findings": len(system_findings),
+                },
+                "original_llm_reply_was_sent": bool(
+                    report.original_llm_reply_was_sent),
+                "patient_visible_response": report.patient_visible_response,
+                "reviewer_message": report.reviewer_message,
+                "timing_ms": (report.timing.to_dict()
+                               if report.timing else {}),
+            },
+        }
+
+        return {
+            "schema_version": "1.0",
+            "project_version": self.PROJECT_VERSION,
+            "ruleset_version": self.repository.ruleset_version,
+            "input_schema_version": report.input_schema_version,
+            "steps": [step1, step2, step3, step4, step5, step6,
+                      step7, step8, step9],
+        }

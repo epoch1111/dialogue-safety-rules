@@ -3,146 +3,253 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dialogue Agent Safety Audit · v4.2.0</title>
+  <title>Dialogue Agent Safety Audit · v4.2.1 仪表板</title>
   <link rel="stylesheet" href="/static/style.css" />
 </head>
 <body>
+  <!-- =================== TOP BAR =================== -->
   <header class="topbar">
     <div class="brand">
       <span class="brand-mark">⚖️</span>
       <div>
         <div class="brand-title">Dialogue Agent Safety Audit</div>
-        <div class="brand-sub">v4.2.0 · 严格输入契约 + 必要上下文 + 确定性规则</div>
+        <div class="brand-sub" id="brand-sub">v? · 加载中…</div>
       </div>
     </div>
     <div class="topbar-status">
-      <span id="health-indicator" class="badge badge-neutral">连接中…</span>
-      <span id="ruleset-indicator" class="badge badge-info">ruleset: --</span>
+      <span id="badge-version" class="badge badge-info">v? —</span>
+      <span id="badge-ruleset" class="badge badge-info">ruleset: —</span>
+      <span id="badge-schema" class="badge badge-info">schema: —</span>
+      <span id="badge-strict" class="badge badge-info">strict mode</span>
+      <span id="badge-compat" class="badge badge-neutral">compat: off</span>
+      <span id="badge-backend" class="badge badge-neutral">后端连接中…</span>
     </div>
   </header>
 
+  <!-- =================== MAIN GRID =================== -->
   <main class="layout">
 
-    <!-- ===== LEFT: INPUT ===== -->
-    <section class="col col-input">
-      <h2 class="col-title">📥 输入</h2>
+    <!-- ========== LEFT: INPUT ========== -->
+    <section class="col col-input" aria-label="输入">
+      <div class="col-header">
+        <span class="col-icon">📥</span>
+        <h2 class="col-title">输入（来自 Dialogue Agent）</h2>
+      </div>
 
-      <div class="panel">
+      <div class="panel panel-scenario">
         <label class="lbl">场景预设</label>
         <select id="scenario-select" class="select"></select>
-        <p class="hint" id="scenario-summary"></p>
+        <p class="hint" id="scenario-summary">加载场景中…</p>
       </div>
 
-      <div class="panel">
-        <label class="lbl" for="patient-state">患者病历 <code>patient_state</code></label>
-        <textarea id="patient-state" class="json-input" rows="14"
-                  spellcheck="false"></textarea>
+      <div class="panel mode-panel">
+        <label class="lbl">模式</label>
+        <div class="mode-row">
+          <label class="toggle">
+            <input type="checkbox" id="strict-toggle" checked />
+            <span>strict_mode</span>
+          </label>
+          <label class="toggle">
+            <input type="checkbox" id="compat-toggle" />
+            <span>compat_mode</span>
+          </label>
+          <label class="toggle">
+            <input type="checkbox" id="simulate-toggle" />
+            <span>simulate_error</span>
+          </label>
+        </div>
       </div>
 
-      <div class="panel">
-        <label class="lbl" for="dialogue-output">Dialogue Agent 输出 <code>dialogue_output</code></label>
-        <textarea id="dialogue-output" class="json-input" rows="18"
-                  spellcheck="false"></textarea>
+      <!-- Patient state visual cards -->
+      <div class="panel" id="patient-panel">
+        <div class="panel-header">
+          <span class="lbl">1. 患者当前情况 <code>patient_state</code></span>
+        </div>
+        <div id="patient-cards" class="card-list">
+          <div class="empty">尚未加载场景。</div>
+        </div>
+      </div>
+
+      <!-- Dialogue output visual cards -->
+      <div class="panel" id="dialogue-panel">
+        <div class="panel-header">
+          <span class="lbl">2. Dialogue Agent 输出 <code>dialogue_output</code></span>
+        </div>
+        <div id="dialogue-cards" class="card-list">
+          <div class="empty">尚未加载场景。</div>
+        </div>
       </div>
 
       <button id="run-btn" class="btn-primary">▶ 提交审计</button>
-      <button id="reset-btn" class="btn-secondary">↺ 清空</button>
-      <p class="small">提示：引擎只接收 <code>patient_state</code> 和 <code>dialogue_output</code>。<strong>不会</strong>传入任何期望结果。</p>
+      <button id="reset-btn" class="btn-secondary">↺ 重置</button>
+
+      <!-- Advanced JSON editor (collapsed by default) -->
+      <details class="panel raw-json-panel">
+        <summary class="lbl">高级输入 — JSON 编辑</summary>
+        <textarea id="patient-state" class="json-input" rows="6"
+                  spellcheck="false" aria-label="patient_state JSON"></textarea>
+        <textarea id="dialogue-output" class="json-input" rows="6"
+                  spellcheck="false" aria-label="dialogue_output JSON"></textarea>
+      </details>
     </section>
 
-    <!-- ===== MIDDLE: TRACE ===== -->
-    <section class="col col-trace">
-      <h2 class="col-title">🔍 审计追踪</h2>
-      <div id="trace" class="trace">
-        <p class="hint hint-big">点击「提交审计」后这里会显示逐步诊断。</p>
+    <!-- ========== MIDDLE: 9-STEP FLOW ========== -->
+    <section class="col col-flow" aria-label="审计流程">
+      <div class="col-header">
+        <span class="col-icon">🔍</span>
+        <h2 class="col-title">规则引擎整体运作流程</h2>
+        <div class="col-actions">
+          <button id="expand-all" class="btn-mini">全部展开</button>
+          <button id="collapse-all" class="btn-mini">全部收起</button>
+        </div>
       </div>
+
+      <div id="step-row-1" class="step-row">
+        <!-- Steps 1-6 injected by app.js -->
+      </div>
+
+      <div id="step-row-2" class="step-row step-row-bottom">
+        <!-- Steps 7-9 injected by app.js -->
+      </div>
+
+      <div id="step-loading" class="hint hint-big" hidden>加载审计流程…</div>
     </section>
 
-    <!-- ===== RIGHT: OUTPUT ===== -->
-    <section class="col col-output">
-      <h2 class="col-title">📤 输出</h2>
+    <!-- ========== RIGHT: OUTPUT ========== -->
+    <section class="col col-output" aria-label="输出">
+      <div class="col-header">
+        <span class="col-icon">📤</span>
+        <h2 class="col-title">输出（审计结果）</h2>
+      </div>
 
-      <div class="panel">
-        <div class="decision-label">最终结论</div>
+      <div class="panel panel-decision">
+        <div class="lbl">最终结论</div>
         <div id="decision-card" class="decision-card decision-unknown">
           <div class="decision-text" id="decision-text">—</div>
           <div class="decision-rule" id="decision-rule"></div>
         </div>
-        <div class="decision-basis" id="decision-basis"></div>
       </div>
 
-      <div class="panel">
-        <label class="lbl">真正发送给患者的内容</label>
+      <div class="panel panel-visible">
+        <div class="lbl">真正发送给患者的内容</div>
         <div id="visible-response" class="visible-response">—</div>
       </div>
 
-      <div class="panel">
-        <label class="lbl">复核提示 reviewer_message</label>
-        <div id="reviewer-message" class="visible-response">—</div>
-      </div>
-
-      <div class="panel">
-        <label class="lbl">原始 LLM 回复是否发送？</label>
+      <div class="panel panel-sent">
+        <div class="lbl">原始 LLM 回复是否发送？</div>
         <div id="original-sent" class="big-flag">—</div>
       </div>
 
-      <div class="panel">
-        <label class="lbl">输入校验 (input_validation_errors)</label>
-        <ul id="ive-list" class="violations"></ul>
+      <div class="panel panel-basis">
+        <div class="lbl">审计依据 <code>decision_basis</code></div>
+        <div id="decision-basis" class="basis-list"></div>
+        <div class="basis-priority">优先级：<strong>BLOCK &gt; REVIEW &gt; PASS</strong></div>
       </div>
 
-      <div class="panel">
-        <label class="lbl">必要上下文缺失 (missing_context_fields)</label>
-        <ul id="missing-list" class="violations"></ul>
+      <div class="panel panel-findings">
+        <div class="lbl">问题分类汇总</div>
+        <div id="findings-counts" class="findings-counts"></div>
       </div>
 
-      <div class="panel">
-        <label class="lbl">一致性违规 (consistency_violations)</label>
-        <ul id="cons-list" class="violations"></ul>
-      </div>
-
-      <div class="panel">
-        <label class="lbl">医学命中 (medical_violations)</label>
-        <ul id="med-list" class="violations"></ul>
-      </div>
-
-      <div class="panel">
-        <label class="lbl">标准化 patient_state</label>
-        <pre id="normalized-patient-state" class="raw-json">(尚未提交)</pre>
-      </div>
-
-      <div class="panel">
-        <label class="lbl">药物上下文 DrugContext</label>
-        <pre id="drug-context" class="raw-json">(尚未提交)</pre>
-      </div>
-
-      <div class="panel">
-        <label class="lbl">候选 / 评估 / 通道</label>
-        <table class="kv-table">
-          <tbody>
-            <tr><th>candidate_rule_ids</th><td><pre id="candidate-rule-ids"></pre></td></tr>
-            <tr><th>evaluated_rule_ids</th><td><pre id="evaluated-rule-ids"></pre></td></tr>
-            <tr><th>retrieval_channels</th><td><pre id="retrieval-channels"></pre></td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="panel">
-        <label class="lbl">耗时 timing (ms)</label>
+      <div class="panel panel-timing">
+        <div class="lbl">耗时 <code>timing_ms</code></div>
         <table id="timing-table" class="timing-table">
           <tbody></tbody>
         </table>
       </div>
-
-      <div class="panel raw-json-panel">
-        <label class="lbl">📦 原始 JSON</label>
-        <details>
-          <summary>展开 / 折叠</summary>
-          <pre id="raw-json" class="raw-json">(尚未提交审计)</pre>
-        </details>
-      </div>
     </section>
   </main>
+
+  <!-- =================== BOTTOM DETAIL =================== -->
+  <section class="bottom" aria-label="详细说明">
+    <div class="bottom-grid">
+
+      <article class="bottom-card">
+        <header class="bottom-card-header">
+          <span class="bottom-icon">📜</span>
+          <h3>规则如何执行</h3>
+        </header>
+        <div id="bottom-rule-example" class="bottom-body">
+          <div class="empty">尚未执行审计。</div>
+        </div>
+      </article>
+
+      <article class="bottom-card">
+        <header class="bottom-card-header">
+          <span class="bottom-icon">💊</span>
+          <h3>DrugContext 示例</h3>
+        </header>
+        <div id="bottom-drug-context" class="bottom-body">
+          <div class="empty">尚未执行审计。</div>
+        </div>
+      </article>
+
+      <article class="bottom-card">
+        <header class="bottom-card-header">
+          <span class="bottom-icon">🗂️</span>
+          <h3>主要规则类型</h3>
+        </header>
+        <div id="bottom-rule-types" class="bottom-body">
+          <div class="empty">加载中…</div>
+        </div>
+      </article>
+
+      <article class="bottom-card">
+        <header class="bottom-card-header">
+          <span class="bottom-icon">🛡️</span>
+          <h3>关键特点</h3>
+        </header>
+        <div class="bottom-body">
+          <ul class="features">
+            <li><span class="dot dot-pass"></span>确定性规则判断</li>
+            <li><span class="dot dot-pass"></span>结构化输入 + JSON Schema</li>
+            <li><span class="dot dot-pass"></span>无运行时 LLM 调用</li>
+            <li><span class="dot dot-pass"></span>无向量数据库实时检索</li>
+            <li><span class="dot dot-pass"></span>可扩展（DSL all/any/not + range）</li>
+            <li><span class="dot dot-pass"></span>可测试（167+31 单测 + 压力测试）</li>
+            <li><span class="dot dot-pass"></span>可审计（全链路 trace）</li>
+            <li><span class="dot dot-pass"></span>Fail-Closed 安全策略</li>
+          </ul>
+        </div>
+      </article>
+
+    </div>
+
+    <!-- =================== DEVELOPER DETAILS =================== -->
+    <details class="dev-details">
+      <summary>开发者详情 — 原始 JSON（默认折叠）</summary>
+      <div class="dev-grid">
+        <div class="panel">
+          <div class="lbl">📦 原始输入 JSON</div>
+          <div class="json-actions">
+            <button class="btn-mini" data-copy="raw-input">复制</button>
+            <button class="btn-mini" data-format="raw-input">格式化</button>
+          </div>
+          <pre id="raw-input" class="raw-json">(尚未提交)</pre>
+        </div>
+        <div class="panel">
+          <div class="lbl">📦 标准化 JSON</div>
+          <div class="json-actions">
+            <button class="btn-mini" data-copy="normalized">复制</button>
+            <button class="btn-mini" data-format="normalized">格式化</button>
+          </div>
+          <pre id="normalized" class="raw-json">(尚未提交)</pre>
+        </div>
+        <div class="panel panel-wide">
+          <div class="lbl">📦 完整 AuditReport JSON</div>
+          <div class="json-actions">
+            <button class="btn-mini" data-copy="raw-audit">复制</button>
+            <button class="btn-mini" data-format="raw-audit">格式化</button>
+          </div>
+          <pre id="raw-audit" class="raw-json">(尚未提交)</pre>
+        </div>
+      </div>
+    </details>
+  </section>
+
+  <footer class="footer">
+    <span id="footer-meta">Dialogue Agent Safety Rule Engine · v? · strict mode</span>
+  </footer>
 
   <script src="/static/app.js"></script>
 </body>
