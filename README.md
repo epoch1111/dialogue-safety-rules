@@ -87,6 +87,47 @@ test completed.` Logs are written to `logs\test_output.txt`,
 Each `DialogueSafetyEngine.audit()` call also writes a JSON record
 to `logs/audit/audit_<timestamp>.json`.
 
+## Unified scenario source (v4.2.1 refactor)
+
+Console demo, web demo, and integration tests all read scenarios from
+one file:
+
+| Source | What it serves |
+|---|---|
+| `data/audit_scenarios.json` | **Single source of truth.** Every console and web scenario lives here. |
+| `audit_scenarios/` loader | Reads + validates + filters the file. |
+| `run_demo.py` | Calls `list_console_scenarios()`. |
+| `audit_web.py` `/api/scenarios` | Calls `list_web_scenarios()`. |
+
+To add a new scenario:
+
+1. Append a new object to `data/audit_scenarios.json` with at least:
+   - `id` (unique string)
+   - `title`, `summary`, `category`
+   - `enabled_for_console`, `enabled_for_web` (booleans)
+   - `audit_input.schema_version`, `audit_input.patient_state`,
+     `audit_input.dialogue_output`
+2. Optionally provide `tags`, `case_profile`,
+   `retrieved_evidence`, `expected_assertions`.
+3. Run `python -m unittest discover -s tests -p "test_*.py"` to
+   confirm the loader accepts the new entry and the engine returns
+   the expected decision.
+
+You do **not** need to edit `run_demo.py`, `audit_web.py`, or any
+other Python file to add a scenario. The next run of either will
+pick up the new id automatically.
+
+The legacy files in `data/` are kept for backward compatibility
+only:
+
+| File | Status |
+|---|---|
+| `data/patient_cases.json` | DEPRECATED. Read by `tests/test_bad_cases.py` to exercise compat_mode behavior with v4.1 / v4.2.0 shapes. |
+| `data/llm_presets.json`  | DEPRECATED. Used by `PresetDialogueAgent` for the same backward-compat tests. |
+
+New scenarios MUST NOT be added to those files. The unified
+`audit_scenarios.json` is the only file the loader consumes.
+
 ## Subsequent individual runs
 
 ```text

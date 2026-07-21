@@ -136,8 +136,8 @@ class DashboardServerTests(unittest.TestCase):
             pass_scenario = ds["items"][0]
             data = _post(base, {
                 "schema_version": "1.0",
-                "patient_state": pass_scenario["patient_state"],
-                "dialogue_output": pass_scenario["dialogue_output"],
+                "patient_state": pass_scenario["audit_input"]["patient_state"],
+                "dialogue_output": pass_scenario["audit_input"]["dialogue_output"],
                 "strict_mode": True,
                 "compat_mode": False,
                 "debug": True,
@@ -158,8 +158,8 @@ class DashboardServerTests(unittest.TestCase):
             block_scenario = ds["items"][1]  # explicit BLOCK
             data = _post(base, {
                 "schema_version": "1.0",
-                "patient_state": block_scenario["patient_state"],
-                "dialogue_output": block_scenario["dialogue_output"],
+                "patient_state": block_scenario["audit_input"]["patient_state"],
+                "dialogue_output": block_scenario["audit_input"]["dialogue_output"],
                 "strict_mode": True,
                 "compat_mode": False,
                 "debug": True,
@@ -180,8 +180,8 @@ class DashboardServerTests(unittest.TestCase):
             review_scenario = ds["items"][2]
             data = _post(base, {
                 "schema_version": "1.0",
-                "patient_state": review_scenario["patient_state"],
-                "dialogue_output": review_scenario["dialogue_output"],
+                "patient_state": review_scenario["audit_input"]["patient_state"],
+                "dialogue_output": review_scenario["audit_input"]["dialogue_output"],
                 "strict_mode": True,
                 "compat_mode": False,
                 "debug": True,
@@ -201,8 +201,8 @@ class DashboardServerTests(unittest.TestCase):
             s = ds["items"][6]  # requires_review=true
             data = _post(base, {
                 "schema_version": "1.0",
-                "patient_state": s["patient_state"],
-                "dialogue_output": s["dialogue_output"],
+                "patient_state": s["audit_input"]["patient_state"],
+                "dialogue_output": s["audit_input"]["dialogue_output"],
                 "strict_mode": True,
                 "compat_mode": False,
                 "debug": True,
@@ -222,8 +222,8 @@ class DashboardServerTests(unittest.TestCase):
             s = ds["items"][14]  # last one (fail-closed)
             data = _post(base, {
                 "schema_version": "1.0",
-                "patient_state": s["patient_state"],
-                "dialogue_output": s["dialogue_output"],
+                "patient_state": s["audit_input"]["patient_state"],
+                "dialogue_output": s["audit_input"]["dialogue_output"],
                 "simulate_error": True,
                 "strict_mode": True,
                 "compat_mode": False,
@@ -244,8 +244,8 @@ class DashboardServerTests(unittest.TestCase):
             block_scenario = ds["items"][1]  # explicit BLOCK
             data = _post(base, {
                 "schema_version": "1.0",
-                "patient_state": block_scenario["patient_state"],
-                "dialogue_output": block_scenario["dialogue_output"],
+                "patient_state": block_scenario["audit_input"]["patient_state"],
+                "dialogue_output": block_scenario["audit_input"]["dialogue_output"],
                 "strict_mode": True,
                 "compat_mode": False,
                 "debug": True,

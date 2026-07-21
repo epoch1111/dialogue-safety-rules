@@ -6,41 +6,35 @@ This module starts a tiny stdlib HTTP server on port ``8765`` that:
   ``style.css``, ``app.js``).
 - Exposes JSON endpoints:
 
-  * ``GET  /api/scenarios``  — list of preset scenarios the page can
-                              load into the editor.
-  * ``POST /api/audit``     — runs ``engine.audit_payload(...)``
-                              and returns the full AuditReport dict
-                              plus the decision and the visible
-                              patient-facing response.
-  * ``GET  /api/health``    — readiness probe.
+  * ``GET  /api/scenarios``   -- list of preset scenarios the page can
+                                 load into the editor.
+  * ``POST /api/audit``       -- runs ``engine.audit_payload(...)``
+                                 and returns the full AuditReport dict
+                                 plus the decision and the visible
+                                 patient-facing response.
+  * ``GET  /api/health``      -- readiness probe.
 
-The server is intentionally stdlib-only so it works inside the
-bundled ``.venv`` and does not require any ``pip install`` step.
+Scenario source
+---------------
+All scenarios live in :mod:`audit_scenarios` which reads
+``data/audit_scenarios.json``.  This module does NOT keep its own
+copy of any scenario array.
 
-Run it with:
+Backward compat
+---------------
+``legacy_trace_scenarios``, ``legacy_dashboard_scenarios``, and
+``legacy_full_clinical_scenarios`` are shim generators that pull the
+historical groupings from the unified file. They exist so tests that
+imported them by name keep passing; production code paths use
+``/api/scenarios``.
+
+Run with:
 
     python audit_web.py            # default port 8765
     python audit_web.py --port N   # choose a different port
 
 Or simply launch ``audit_web.bat`` on Windows, which opens the
 browser to http://127.0.0.1:8765/ automatically.
-
-v4.2.1 scenarios
-----------------
-A: legal new-schema input, no risk → PASS
-B: metformin + eGFR 24 → BLOCK
-C: metformin + missing eGFR → REVIEW (MISSING_CONTEXT)
-D: current_medications contains a string → REVIEW
-E: unknown drug name "辛伐他烨" → REVIEW
-F: drug_id ↔ drug_name mismatch → REVIEW
-G: amlodipine 1 g (1000 mg/day > 10) → BLOCK
-H: dose_value = -5 → REVIEW (NEGATIVE_DOSE)
-I: replace with atorvastatin not in active regimen → REVIEW
-J: text says "avoid grapefruit" but structured food says "recommend"
-   → REVIEW (SYS003)
-K: simulate engine exception via ``simulate_error=true`` → REVIEW,
-   SYSTEM_ERROR
-L: requires_review=true → REVIEW (LLM_DECLARED_UNCERTAINTY)
 """
 
 from __future__ import annotations
@@ -55,7 +49,11 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any, Dict, List
 
-from audit_web_cases.full_clinical_cases import FULL_CLINICAL_SCENARIOS
+from audit_scenarios import (
+    get_scenario_by_id,
+    list_web_scenarios,
+    SCENARIOS_FILE,
+)
 
 
 ROOT = Path(__file__).resolve().parent
@@ -80,818 +78,95 @@ def _get_engine():
 
 
 # ---------------------------------------------------------------------------
-# Scenarios
-# ---------------------------------------------------------------------------
-
-TRACE_SCENARIOS: List[Dict[str, Any]] = [
-    {
-        "id": "trace_a_metformin_egfr",
-        "title": "场景A：二甲双胍 + eGFR 24",
-        "summary": "患者有二甲双胍治疗 + eGFR=24，但 LLM 建议继续。应 BLOCK。",
-        "patient_state": {
-            "patient_id": "TRACE_METFORMIN_EGFR",
-            "egfr": 24,
-            "current_medications": [
-                {"drug_id": "metformin", "drug_name": "二甲双胍", "status": "active"},
-            ],
-        },
-        "reply_text": "建议继续使用二甲双胍500毫克，每日2次。",
-        "dialogue_output": {
-            "reply_text": "建议继续使用二甲双胍500毫克，每日2次。",
-            "medication_actions": [
-                {
-                    "drug_id": "metformin",
-                    "drug_name": "二甲双胍",
-                    "action": "continue",
-                    "dose_value": 500,
-                    "dose_unit": "mg",
-                    "frequency_per_day": 2,
-                    "route": "oral",
-                },
-            ],
-            "food_advice": [],
-            "exercise_advice": [],
-            "care_actions": [],
-        },
-    },
-    {
-        "id": "trace_b_metformin_hold",
-        "title": "场景B：同一患者，但建议 hold",
-        "summary": "同一患者，但 LLM 建议暂停二甲双胍 + 提供急诊评估。应 PASS。",
-        "patient_state": {
-            "patient_id": "TRACE_METFORMIN_SAFE",
-            "egfr": 24,
-            "latest_systolic_bp_mmHg": 130,
-            "serum_potassium_mmol_l": 4.0,
-            "current_medications": [
-                {"drug_id": "metformin", "drug_name": "二甲双胍", "status": "active"},
-            ],
-        },
-        "reply_text": (
-            "您的肾功能指标需要医生重新评估,"
-            "目前不要自行继续或调整二甲双胍,"
-            "请尽快联系医生。"
-        ),
-        "dialogue_output": {
-            "reply_text": (
-                "您的肾功能指标需要医生重新评估,"
-                "目前不要自行继续或调整二甲双胍,"
-                "请尽快联系医生。"
-            ),
-            "medication_actions": [
-                {
-                    "drug_id": "metformin",
-                    "drug_name": "二甲双胍",
-                    "action": "hold",
-                    "route": "oral",
-                },
-            ],
-            "food_advice": [],
-            "exercise_advice": [],
-            "care_actions": [
-                {
-                    "type": "urgent_medical_evaluation",
-                    "target": "renal_function",
-                    "action": "recommend",
-                },
-            ],
-        },
-    },
-]
-
-
-# v4.2.0: 11 scenarios required by the spec section 15.
-LEGACY_V42_SCENARIOS: List[Dict[str, Any]] = [
-    {
-        "id": "v42_A_legal_pass",
-        "title": "A. 合法 PASS 输入",
-        "summary": "完整 patient_state + 合规 dialogue_output → PASS。",
-        "patient_state": {
-            "patient_id": "P_A",
-            "egfr": 90,
-            "latest_systolic_bp_mmHg": 120,
-            "latest_glucose_mmol_l": 6.0,
-            "serum_potassium_mmol_l": 4.0,
-            "current_medications": [],
-            "disease_codes": [],
-        },
-        "reply_text": "请按医生建议定期复查。",
-        "dialogue_output": {
-            "reply_text": "请按医生建议定期复查。",
-            "medication_actions": [],
-            "food_advice": [],
-            "exercise_advice": [],
-            "care_actions": [],
-            "requires_review": False,
-            "uncertainty_reasons": [],
-        },
-    },
-    {
-        "id": "v42_B_explicit_block",
-        "title": "B. 明确 BLOCK 输入",
-        "summary": "二甲双胍 + eGFR=24 → BLOCK。",
-        "patient_state": {
-            "patient_id": "P_B",
-            "egfr": 24,
-            "current_medications": [
-                {"drug_id": "metformin", "drug_name": "二甲双胍",
-                 "status": "active", "dose_value": 500, "dose_unit": "mg",
-                 "frequency_per_day": 2, "route": "oral"},
-            ],
-            "disease_codes": ["diabetes"],
-        },
-        "reply_text": "继续使用二甲双胍。",
-        "dialogue_output": {
-            "reply_text": "继续使用二甲双胍。",
-            "medication_actions": [{
-                "drug_id": "metformin", "drug_name": "二甲双胍",
-                "action": "continue", "dose_value": 500, "dose_unit": "mg",
-                "frequency_per_day": 2, "route": "oral",
-            }],
-            "food_advice": [], "exercise_advice": [], "care_actions": [],
-            "requires_review": False, "uncertainty_reasons": [],
-        },
-    },
-    {
-        "id": "v42_C_missing_egfr",
-        "title": "C. 缺少 eGFR → REVIEW",
-        "summary": "Metformin 续用但缺少 eGFR → REVIEW。",
-        "patient_state": {
-            "patient_id": "P_C",
-            "current_medications": [
-                {"drug_id": "metformin", "drug_name": "二甲双胍", "status": "active"},
-            ],
-            "disease_codes": ["diabetes"],
-        },
-        "reply_text": "继续二甲双胍。",
-        "dialogue_output": {
-            "reply_text": "继续二甲双胍。",
-            "medication_actions": [{
-                "drug_id": "metformin", "drug_name": "二甲双胍",
-                "action": "continue", "dose_value": 500, "dose_unit": "mg",
-                "frequency_per_day": 2, "route": "oral",
-            }],
-            "food_advice": [], "exercise_advice": [], "care_actions": [],
-            "requires_review": False, "uncertainty_reasons": [],
-        },
-    },
-    {
-        "id": "v42_D_string_med_item",
-        "title": "D. current_medications 含字符串 → REVIEW",
-        "summary": "current_medications 中包含字符串 → REVIEW，不崩溃。",
-        "patient_state": {
-            "patient_id": "P_D",
-            "current_medications": ["metformin"],
-            "disease_codes": [],
-        },
-        "reply_text": "建议",
-        "dialogue_output": {
-            "reply_text": "建议",
-            "medication_actions": [], "food_advice": [], "exercise_advice": [],
-            "care_actions": [], "requires_review": False, "uncertainty_reasons": [],
-        },
-    },
-    {
-        "id": "v42_E_unknown_drug",
-        "title": "E. 未知药物「辛伐他烨」 → REVIEW",
-        "summary": "drug_name 不在标准药物表 → REVIEW。",
-        "patient_state": {
-            "patient_id": "P_E",
-            "egfr": 90,
-            "latest_systolic_bp_mmHg": 120,
-            "current_medications": [
-                {"drug_id": "simvastatin", "drug_name": "辛伐他烨",
-                 "status": "active"},
-            ],
-            "disease_codes": [],
-        },
-        "reply_text": "",
-        "dialogue_output": {
-            "reply_text": "",
-            "medication_actions": [],
-            "food_advice": [], "exercise_advice": [], "care_actions": [],
-            "requires_review": False, "uncertainty_reasons": [],
-        },
-    },
-    {
-        "id": "v42_F_drug_id_mismatch",
-        "title": "F. drug_id 与 drug_name 不匹配 → REVIEW",
-        "summary": "drug_id=simvastatin, drug_name=阿托伐他汀 → REVIEW。",
-        "patient_state": {
-            "patient_id": "P_F",
-            "egfr": 90,
-            "latest_systolic_bp_mmHg": 120,
-            "current_medications": [
-                {"drug_id": "simvastatin", "drug_name": "阿托伐他汀",
-                 "status": "active"},
-            ],
-            "disease_codes": [],
-        },
-        "reply_text": "",
-        "dialogue_output": {
-            "reply_text": "",
-            "medication_actions": [], "food_advice": [], "exercise_advice": [],
-            "care_actions": [], "requires_review": False, "uncertainty_reasons": [],
-        },
-    },
-    {
-        "id": "v42_G_amlodipine_1g",
-        "title": "G. 氨氯地平 1 g → 单位换算后 BLOCK",
-        "summary": "amlodipine 1 g = 1000 mg/day > 10 mg/day → BLOCK。",
-        "patient_state": {
-            "patient_id": "P_G",
-            "egfr": 90,
-            "latest_systolic_bp_mmHg": 130,
-            "current_medications": [],
-            "disease_codes": [],
-        },
-        "reply_text": "开始氨氯地平 1 克，每日 1 次。",
-        "dialogue_output": {
-            "reply_text": "开始氨氯地平 1 克，每日 1 次。",
-            "medication_actions": [{
-                "drug_id": "amlodipine", "drug_name": "氨氯地平",
-                "action": "start", "dose_value": 1, "dose_unit": "g",
-                "frequency_per_day": 1, "route": "oral",
-            }],
-            "food_advice": [], "exercise_advice": [], "care_actions": [],
-            "requires_review": False, "uncertainty_reasons": [],
-        },
-    },
-    {
-        "id": "v42_H_negative_dose",
-        "title": "H. dose_value 为负数 → REVIEW",
-        "summary": "dose_value=-5 → REVIEW。",
-        "patient_state": {
-            "patient_id": "P_H",
-            "egfr": 90,
-            "latest_systolic_bp_mmHg": 120,
-            "current_medications": [],
-            "disease_codes": [],
-        },
-        "reply_text": "",
-        "dialogue_output": {
-            "reply_text": "",
-            "medication_actions": [{
-                "drug_id": "amlodipine", "drug_name": "氨氯地平",
-                "action": "start", "dose_value": -5, "dose_unit": "mg",
-                "frequency_per_day": 1, "route": "oral",
-            }],
-            "food_advice": [], "exercise_advice": [], "care_actions": [],
-            "requires_review": False, "uncertainty_reasons": [],
-        },
-    },
-    {
-        "id": "v42_I_replace_no_old",
-        "title": "I. replace 缺少旧药 → REVIEW",
-        "summary": "replace 但旧药不在 current → REVIEW。",
-        "patient_state": {
-            "patient_id": "P_I",
-            "egfr": 90,
-            "latest_systolic_bp_mmHg": 120,
-            "current_medications": [
-                {"drug_id": "ramipril", "drug_name": "雷米普利",
-                 "status": "active"},
-            ],
-            "disease_codes": [],
-        },
-        "reply_text": "",
-        "dialogue_output": {
-            "reply_text": "",
-            "medication_actions": [{
-                "drug_id": "lisinopril", "drug_name": "赖诺普利",
-                "action": "replace",
-                "replace_drug_id": "atorvastatin",
-                "replace_drug_name": "阿托伐他汀",
-                "dose_value": 10, "dose_unit": "mg",
-                "frequency_per_day": 1, "route": "oral",
-            }],
-            "food_advice": [], "exercise_advice": [], "care_actions": [],
-            "requires_review": False, "uncertainty_reasons": [],
-        },
-    },
-    {
-        "id": "v42_J_text_food_conflict",
-        "title": "J. 正文与结构化 food action 冲突 → REVIEW",
-        "summary": "正文 '不要喝西柚汁' 但 food_advice action=recommend → REVIEW。",
-        "patient_state": {
-            "patient_id": "P_J",
-            "egfr": 90,
-            "latest_systolic_bp_mmHg": 120,
-            "current_medications": [
-                {"drug_id": "simvastatin", "drug_name": "辛伐他汀",
-                 "status": "active"},
-            ],
-            "disease_codes": [],
-        },
-        "reply_text": "不要喝西柚汁。",
-        "dialogue_output": {
-            "reply_text": "不要喝西柚汁。",
-            "medication_actions": [],
-            "food_advice": [{
-                "food_concept_id": "grapefruit",
-                "food_name": "西柚汁",
-                "action": "recommend",
-            }],
-            "exercise_advice": [], "care_actions": [],
-            "requires_review": False, "uncertainty_reasons": [],
-        },
-    },
-    {
-        "id": "v42_K_system_error",
-        "title": "K. 模拟异常 → REVIEW, 原回复不发送",
-        "summary": "通过 /api/audit 触发异常路径 → REVIEW, original_llm_reply_was_sent=False。",
-        "patient_state": {"patient_id": "P_K", "current_medications": [],
-                          "disease_codes": []},
-        "reply_text": "",
-        "dialogue_output": {
-            "reply_text": "",
-            "medication_actions": [], "food_advice": [], "exercise_advice": [],
-            "care_actions": [], "requires_review": False, "uncertainty_reasons": [],
-        },
-    },
-    {
-        "id": "v42_L_requires_review",
-        "title": "L. requires_review=true → REVIEW",
-        "summary": "LLM 自报 requires_review=true → REVIEW (LLM_DECLARED_UNCERTAINTY)。",
-        "patient_state": {"patient_id": "P_L", "current_medications": [],
-                          "disease_codes": []},
-        "reply_text": "",
-        "dialogue_output": {
-            "reply_text": "",
-            "medication_actions": [], "food_advice": [], "exercise_advice": [],
-            "care_actions": [],
-            "requires_review": True, "uncertainty_reasons": [],
-        },
-    },
-    {
-        "id": "v42_M_uncertainty_reasons",
-        "title": "M. uncertainty_reasons 非空 → REVIEW",
-        "summary": "LLM 自报 uncertainty_reasons 非空 → REVIEW (LLM_DECLARED_UNCERTAINTY)。",
-        "patient_state": {"patient_id": "P_M", "current_medications": [],
-                          "disease_codes": []},
-        "reply_text": "",
-        "dialogue_output": {
-            "reply_text": "",
-            "medication_actions": [], "food_advice": [], "exercise_advice": [],
-            "care_actions": [],
-            "requires_review": False,
-            "uncertainty_reasons": ["无法确认患者当前用药"],
-        },
-    },
-    {
-        "id": "v42_N_missing_route_start",
-        "title": "N. start 缺少 route → REVIEW",
-        "summary": "v4.2.1 禁止缺失 route → REVIEW (INPUT_MEDICATION_ACTION_MISSING_FIELDS)。",
-        "patient_state": {"patient_id": "P_N", "current_medications": [],
-                          "disease_codes": []},
-        "reply_text": "",
-        "dialogue_output": {
-            "reply_text": "",
-            "medication_actions": [{
-                "drug_id": "amlodipine", "drug_name": "氨氯地平",
-                "action": "start",
-                "dose_value": 5, "dose_unit": "mg",
-                "frequency_per_day": 1,
-            }],
-            "food_advice": [], "exercise_advice": [],
-            "care_actions": [], "requires_review": False,
-            "uncertainty_reasons": [],
-        },
-    },
-    {
-        "id": "v42_O_measurement_unit_error",
-        "title": "O. measurement unit 错误 → REVIEW",
-        "summary": "egfr unit=BANANA + observed_at=not-a-date → REVIEW。",
-        "patient_state": {
-            "patient_id": "P_O", "current_medications": [],
-            "disease_codes": [],
-            "measurements": {
-                "egfr": {
-                    "value": 24, "unit": "BANANA",
-                    "observed_at": "not-a-date",
-                    "source": "madeup", "confirmed": False,
-                }
-            },
-        },
-        "reply_text": "",
-        "dialogue_output": {
-            "reply_text": "",
-            "medication_actions": [], "food_advice": [], "exercise_advice": [],
-            "care_actions": [], "requires_review": False,
-            "uncertainty_reasons": [],
-        },
-    },
-    {
-        "id": "v42_P_hold_metformin_no_egfr",
-        "title": "P. hold 二甲双胍且无 eGFR → REVIEW (但非因 eGFR)",
-        "summary": "hold 动作不触发 continue/patient_state eGFR 规则；只有 unordered_message 才进 REVIEW。",
-        "patient_state": {
-            "patient_id": "P_P",
-            "current_medications": [
-                {"drug_id": "metformin", "drug_name": "二甲双胍",
-                 "status": "active"}],
-            "disease_codes": [],
-        },
-        "reply_text": "建议暂停二甲双胍并尽快就医。",
-        "dialogue_output": {
-            "reply_text": "建议暂停二甲双胍并尽快就医。",
-            "medication_actions": [{
-                "drug_id": "metformin", "drug_name": "二甲双胍",
-                "action": "hold", "route": "oral",
-            }],
-            "food_advice": [], "exercise_advice": [],
-            "care_actions": [
-                {"type": "urgent_medical_evaluation",
-                 "action": "recommend"},
-            ],
-            "requires_review": False, "uncertainty_reasons": [],
-        },
-    },
-]
-
-
-# ---------------------------------------------------------------------------
-# v4.2.1 dashboard scenarios — mapped to the 15 visual use cases
+# Scenario grouping (legacy surface — kept for backward compat with tests)
 # ---------------------------------------------------------------------------
 
 
-DASHBOARD_SCENARIOS: List[Dict[str, Any]] = [
-    {
-        "id": "v421_dash_01_legal_pass",
-        "title": "1. 合法 PASS 输入",
-        "summary": "完整 patient_state + 合规 dialogue_output → PASS。",
-        "patient_state": {
-            "patient_id": "DSH001",
-            "current_medications": [],
-            "disease_codes": [],
-        },
-        "reply_text": "请按医生建议定期复查。",
-        "dialogue_output": {
-            "reply_text": "请按医生建议定期复查。",
-            "medication_actions": [], "food_advice": [],
-            "exercise_advice": [], "care_actions": [],
-            "requires_review": False, "uncertainty_reasons": [],
-        },
-    },
-    {
-        "id": "v421_dash_02_explicit_block",
-        "title": "2. 明确 BLOCK",
-        "summary": "二甲双胍 + eGFR=24 → BLOCK。",
-        "patient_state": {
-            "patient_id": "DSH002",
-            "current_medications": [
-                {"drug_id": "metformin", "drug_name": "二甲双胍",
-                 "status": "active"}],
-            "disease_codes": ["diabetes"],
-            "measurements": {
-                "egfr": {
-                    "value": 24, "unit": "mL/min/1.73m2",
-                    "observed_at": "2026-07-20T09:00:00+08:00",
-                    "source": "laboratory", "confirmed": True,
-                },
-            },
-        },
-        "reply_text": "继续使用二甲双胍。",
-        "dialogue_output": {
-            "reply_text": "继续使用二甲双胍。",
-            "medication_actions": [{
-                "drug_id": "metformin", "drug_name": "二甲双胍",
-                "action": "continue",
-                "dose_value": 500, "dose_unit": "mg",
-                "frequency_per_day": 2, "route": "oral",
-            }],
-            "food_advice": [], "exercise_advice": [],
-            "care_actions": [], "requires_review": False,
-            "uncertainty_reasons": [],
-        },
-    },
-    {
-        "id": "v421_dash_03_missing_egfr",
-        "title": "3. 缺 eGFR → REVIEW",
-        "summary": "继续二甲双胍但缺 eGFR → MISSING_CONTEXT → REVIEW。",
-        "patient_state": {
-            "patient_id": "DSH003",
-            "current_medications": [
-                {"drug_id": "metformin", "drug_name": "二甲双胍",
-                 "status": "active"}],
-            "disease_codes": ["diabetes"],
-        },
-        "reply_text": "继续二甲双胍。",
-        "dialogue_output": {
-            "reply_text": "继续二甲双胍。",
-            "medication_actions": [{
-                "drug_id": "metformin", "drug_name": "二甲双胍",
-                "action": "continue",
-                "dose_value": 500, "dose_unit": "mg",
-                "frequency_per_day": 2, "route": "oral",
-            }],
-            "food_advice": [], "exercise_advice": [],
-            "care_actions": [], "requires_review": False,
-            "uncertainty_reasons": [],
-        },
-    },
-    {
-        "id": "v421_dash_04_schema_invalid",
-        "title": "4. 输入 Schema 错误 → REVIEW",
-        "summary": "缺 schema_version + 错误 measurement unit → REVIEW。",
-        "patient_state": {
-            "patient_id": "DSH004",
-            "current_medications": [],
-            "disease_codes": [],
-            "measurements": {
-                "egfr": {
-                    "value": 50, "unit": "BANANA",
-                    "observed_at": "not-a-date",
-                    "source": "madeup", "confirmed": False,
-                },
-            },
-        },
-        "reply_text": "",
-        "dialogue_output": {
-            "reply_text": "",
-            "medication_actions": [], "food_advice": [],
-            "exercise_advice": [], "care_actions": [],
-            "requires_review": False, "uncertainty_reasons": [],
-        },
-    },
-    {
-        "id": "v421_dash_05_drug_id_mismatch",
-        "title": "5. drug_id ≠ drug_name → REVIEW",
-        "summary": "drug_id=simvastatin, drug_name=阿托伐他汀 → INPUT_DRUG_ID_NAME_MISMATCH。",
-        "patient_state": {
-            "patient_id": "DSH005",
-            "current_medications": [
-                {"drug_id": "simvastatin", "drug_name": "阿托伐他汀",
-                 "status": "active"}],
-            "disease_codes": [],
-        },
-        "reply_text": "",
-        "dialogue_output": {
-            "reply_text": "",
-            "medication_actions": [], "food_advice": [],
-            "exercise_advice": [], "care_actions": [],
-            "requires_review": False, "uncertainty_reasons": [],
-        },
-    },
-    {
-        "id": "v421_dash_06_text_struct_conflict",
-        "title": "6. 正文 vs 结构化冲突 → REVIEW",
-        "summary": "正文 '不要喝西柚汁' 但 food_advice action=recommend → SYS003。",
-        "patient_state": {
-            "patient_id": "DSH006",
-            "current_medications": [
-                {"drug_id": "simvastatin", "drug_name": "辛伐他汀",
-                 "status": "active"}],
-            "disease_codes": [],
-        },
-        "reply_text": "不要喝西柚汁。",
-        "dialogue_output": {
-            "reply_text": "不要喝西柚汁。",
-            "medication_actions": [],
-            "food_advice": [{
-                "food_concept_id": "grapefruit",
-                "food_name": "西柚汁",
-                "action": "recommend",
-            }],
-            "exercise_advice": [], "care_actions": [],
-            "requires_review": False, "uncertainty_reasons": [],
-        },
-    },
-    {
-        "id": "v421_dash_07_requires_review_true",
-        "title": "7. requires_review=true → REVIEW",
-        "summary": "LLM 自报 requires_review=true → LLM_DECLARED_UNCERTAINTY。",
-        "patient_state": {
-            "patient_id": "DSH007",
-            "current_medications": [],
-            "disease_codes": [],
-        },
-        "reply_text": "",
-        "dialogue_output": {
-            "reply_text": "",
-            "medication_actions": [], "food_advice": [],
-            "exercise_advice": [], "care_actions": [],
-            "requires_review": True, "uncertainty_reasons": [],
-        },
-    },
-    {
-        "id": "v421_dash_08_unknown_drug",
-        "title": "8. unknown drug 辛伐他烨 → REVIEW",
-        "summary": "drug_name=辛伐他烨 不在术语表 → REVIEW。",
-        "patient_state": {
-            "patient_id": "DSH008",
-            "current_medications": [
-                {"drug_id": "simvastatin", "drug_name": "辛伐他烨",
-                 "status": "active"}],
-            "disease_codes": [],
-        },
-        "reply_text": "",
-        "dialogue_output": {
-            "reply_text": "",
-            "medication_actions": [], "food_advice": [],
-            "exercise_advice": [], "care_actions": [],
-            "requires_review": False, "uncertainty_reasons": [],
-        },
-    },
-    {
-        "id": "v421_dash_09_overdose",
-        "title": "9. 超过最大剂量 → BLOCK",
-        "summary": "氨氯地平 1 g = 1000 mg/day > 10 mg/day → BLOCK。",
-        "patient_state": {
-            "patient_id": "DSH009",
-            "current_medications": [],
-            "disease_codes": [],
-        },
-        "reply_text": "开始氨氯地平 1 克，每日 1 次。",
-        "dialogue_output": {
-            "reply_text": "开始氨氯地平 1 克，每日 1 次。",
-            "medication_actions": [{
-                "drug_id": "amlodipine", "drug_name": "氨氯地平",
-                "action": "start",
-                "dose_value": 1, "dose_unit": "g",
-                "frequency_per_day": 1, "route": "oral",
-            }],
-            "food_advice": [], "exercise_advice": [],
-            "care_actions": [], "requires_review": False,
-            "uncertainty_reasons": [],
-        },
-    },
-    {
-        "id": "v421_dash_10_ddi_block",
-        "title": "10. 药物相互作用 → BLOCK",
-        "summary": "辛伐他汀 + 克拉霉素 → R003 BLOCK。",
-        "patient_state": {
-            "patient_id": "DSH010",
-            "current_medications": [
-                {"drug_id": "simvastatin", "drug_name": "辛伐他汀",
-                 "status": "active"},
-                {"drug_id": "clarithromycin", "drug_name": "克拉霉素",
-                 "status": "active"},
-            ],
-            "disease_codes": [],
-        },
-        "reply_text": "继续使用这两种药。",
-        "dialogue_output": {
-            "reply_text": "继续使用这两种药。",
-            "medication_actions": [
-                {
-                    "drug_id": "simvastatin", "drug_name": "辛伐他汀",
-                    "action": "continue",
-                    "dose_value": 20, "dose_unit": "mg",
-                    "frequency_per_day": 1, "route": "oral",
-                },
-                {
-                    "drug_id": "clarithromycin", "drug_name": "克拉霉素",
-                    "action": "continue",
-                    "dose_value": 500, "dose_unit": "mg",
-                    "frequency_per_day": 2, "route": "oral",
-                },
-            ],
-            "food_advice": [], "exercise_advice": [],
-            "care_actions": [], "requires_review": False,
-            "uncertainty_reasons": [],
-        },
-    },
-    {
-        "id": "v421_dash_11_drug_food",
-        "title": "11. 药物与食物风险 → REVIEW",
-        "summary": "辛伐他汀 + 推荐西柚汁 → R023_STATIN_GRAPEFRUIT REVIEW。",
-        "patient_state": {
-            "patient_id": "DSH011",
-            "current_medications": [
-                {"drug_id": "simvastatin", "drug_name": "辛伐他汀",
-                 "status": "active"}],
-            "disease_codes": [],
-        },
-        "reply_text": "建议每天喝一杯西柚汁。",
-        "dialogue_output": {
-            "reply_text": "建议每天喝一杯西柚汁。",
-            "medication_actions": [],
-            "food_advice": [{
-                "food_concept_id": "grapefruit",
-                "food_name": "西柚汁",
-                "action": "recommend",
-            }],
-            "exercise_advice": [], "care_actions": [],
-            "requires_review": False, "uncertainty_reasons": [],
-        },
-    },
-    {
-        "id": "v421_dash_12_drug_exercise",
-        "title": "12. 药物与运动风险 → BLOCK",
-        "summary": "氨氯地平 + 剧烈运动 + 收缩压 170 → R026 BLOCK。",
-        "patient_state": {
-            "patient_id": "DSH012",
-            "current_medications": [
-                {"drug_id": "amlodipine", "drug_name": "氨氯地平",
-                 "status": "active"}],
-            "disease_codes": [],
-            "measurements": {
-                "systolic_bp": {
-                    "value": 170, "unit": "mmHg",
-                    "observed_at": "2026-07-20T09:00:00+08:00",
-                    "source": "clinic_visit", "confirmed": True,
-                },
-            },
-        },
-        "reply_text": "立即开始剧烈跑步。",
-        "dialogue_output": {
-            "reply_text": "立即开始剧烈跑步。",
-            "medication_actions": [],
-            "exercise_advice": [{
-                "activity_concept_id": "running",
-                "activity_name": "跑步",
-                "intensity": "vigorous",
-                "action": "recommend",
-            }],
-            "food_advice": [], "care_actions": [],
-            "requires_review": False, "uncertainty_reasons": [],
-        },
-    },
-    {
-        "id": "v421_dash_13_hold_safe",
-        "title": "13. hold 药物后安全",
-        "summary": "hold 二甲双胍 + urgent care → 不要求 eGFR，决策 REVIEW (因缺 eGFR 但与动作无关)。",
-        "patient_state": {
-            "patient_id": "DSH013",
-            "current_medications": [
-                {"drug_id": "metformin", "drug_name": "二甲双胍",
-                 "status": "active"}],
-            "disease_codes": ["diabetes"],
-        },
-        "reply_text": "建议暂停二甲双胍并尽快就医复查。",
-        "dialogue_output": {
-            "reply_text": "建议暂停二甲双胍并尽快就医复查。",
-            "medication_actions": [{
-                "drug_id": "metformin", "drug_name": "二甲双胍",
-                "action": "hold", "route": "oral",
-            }],
-            "food_advice": [], "exercise_advice": [],
-            "care_actions": [
-                {"type": "urgent_medical_evaluation",
-                 "action": "recommend"},
-            ],
-            "requires_review": False, "uncertainty_reasons": [],
-        },
-    },
-    {
-        "id": "v421_dash_14_replace_drug_ctx",
-        "title": "14. replace 药物 DrugContext 变化",
-        "summary": "replace 辛伐他汀 → 阿托伐他汀，resulting_drugs 实际只有 atorvastatin。",
-        "patient_state": {
-            "patient_id": "DSH014",
-            "current_medications": [
-                {"drug_id": "simvastatin", "drug_name": "辛伐他汀",
-                 "status": "active"}],
-            "disease_codes": [],
-        },
-        "reply_text": "改用阿托伐他汀。",
-        "dialogue_output": {
-            "reply_text": "改用阿托伐他汀。",
-            "medication_actions": [{
-                "drug_id": "atorvastatin", "drug_name": "阿托伐他汀",
-                "action": "replace",
-                "replace_drug_id": "simvastatin",
-                "replace_drug_name": "辛伐他汀",
-                "dose_value": 10, "dose_unit": "mg",
-                "frequency_per_day": 1, "route": "oral",
-            }],
-            "food_advice": [], "exercise_advice": [],
-            "care_actions": [], "requires_review": False,
-            "uncertainty_reasons": [],
-        },
-    },
-    {
-        "id": "v421_dash_15_fail_closed",
-        "title": "15. 系统异常 fail-closed → REVIEW",
-        "summary": "通过 simulate_error=true 强制引擎抛错 → REVIEW, original_llm_reply_was_sent=False。",
-        "patient_state": {
-            "patient_id": "DSH015",
-            "current_medications": [],
-            "disease_codes": [],
-        },
-        "reply_text": "",
-        "dialogue_output": {
-            "reply_text": "",
-            "medication_actions": [], "food_advice": [],
-            "exercise_advice": [], "care_actions": [],
-            "requires_review": False, "uncertainty_reasons": [],
-        },
-        "simulate_error": True,
-    },
-]
+def _scenarios_by_category(categories: List[str]) -> List[Dict[str, Any]]:
+    out = []
+    for s in list_web_scenarios():
+        if s.get("category") in categories:
+            out.append(s)
+    return out
+
+
+def _strip_presentation(scenario: Dict[str, Any]) -> Dict[str, Any]:
+    """Return a copy of the scenario containing only the fields the web
+    UI is allowed to read. Strip every test-only / presentation-only
+    field so the browser cannot branch on them.
+    """
+    return {
+        "id": scenario.get("id"),
+        "title": scenario.get("title"),
+        "summary": scenario.get("summary"),
+        "category": scenario.get("category"),
+        "tags": scenario.get("tags", []),
+        "enabled_for_console": bool(scenario.get("enabled_for_console", False)),
+        "enabled_for_web": bool(scenario.get("enabled_for_web", False)),
+        "case_profile": scenario.get("case_profile"),
+        "retrieved_evidence": scenario.get("retrieved_evidence", []),
+        "audit_input": dict(scenario.get("audit_input", {})),
+        "simulate_error": bool(scenario.get("simulate_error", False)),
+        # INTENTIONALLY OMITTED:
+        #   - expected_assertions  (test-only; the engine must NEVER
+        #     see this field.)
+    }
+
+
+def _scenarios_to_groups(items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    by_cat: Dict[str, List[Dict[str, Any]]] = {}
+    for it in items:
+        c = it.get("category", "legacy")
+        by_cat.setdefault(c, []).append(it)
+    titles = {
+        "trace": "踪迹演示 (Trace)",
+        "dashboard": "v4.2.1 仪表板场景 1-15",
+        "full_clinical": "完整临床案例（Full Clinical Cases）",
+        "legacy": "v4.2.0 / v4.2.1 场景 A-P",
+        "regression": "回归场景",
+        "console_demo": "控制台演示场景",
+    }
+    order = ["trace", "dashboard", "full_clinical", "legacy", "regression", "console_demo"]
+    out = []
+    for cat in order:
+        if cat in by_cat:
+            out.append({
+                "group": titles.get(cat, cat),
+                "items": [_strip_presentation(x) for x in by_cat[cat]],
+            })
+    if not out:
+        # Fallback: a single group containing everything.
+        out.append({
+            "group": "All Scenarios",
+            "items": [_strip_presentation(x) for x in items],
+        })
+    return out
 
 
 def list_scenarios() -> List[Dict[str, Any]]:
-    return [
-        {"group": "踪迹演示 (Trace)", "items": TRACE_SCENARIOS},
-        {"group": "v4.2.1 仪表板场景 1-15",
-         "items": DASHBOARD_SCENARIOS},
-        {"group": "完整临床案例（Full Clinical Cases）",
-         "items": FULL_CLINICAL_SCENARIOS},
-        {"group": "v4.2.0 / v4.2.1 场景 A-P",
-         "items": LEGACY_V42_SCENARIOS},
-    ]
+    """Return grouped scenarios. Only presentation data is exposed —
+    ``expected_assertions`` is never sent to the front-end."""
+    return _scenarios_to_groups(list_web_scenarios())
+
+
+# ---------------------------------------------------------------------------
+# Legacy test shims — these lists now just read the unified file.
+# ---------------------------------------------------------------------------
+
+
+def legacy_trace_scenarios() -> List[Dict[str, Any]]:
+    """Test-only backward-compat accessor for TRACE scenarios."""
+    return _scenarios_by_category(["trace"])
+
+
+def legacy_dashboard_scenarios() -> List[Dict[str, Any]]:
+    """Test-only backward-compat accessor for dashboard scenarios."""
+    return _scenarios_by_category(["dashboard"])
+
+
+def legacy_full_clinical_scenarios() -> List[Dict[str, Any]]:
+    """Test-only backward-compat accessor for full clinical cases."""
+    return _scenarios_by_category(["full_clinical"])
 
 
 # ---------------------------------------------------------------------------
@@ -900,53 +175,24 @@ def list_scenarios() -> List[Dict[str, Any]]:
 
 
 _RULE_TYPE_CATALOG = [
-    {
-        "key": "patient_risk",
-        "name_zh": "患者风险规则",
-        "desc": "基于患者字段（如 eGFR、血压）触发风险标志，"
-                "驱动 response_compliance。",
-    },
-    {
-        "key": "response_compliance",
-        "name_zh": "回复合规规则",
-        "desc": "命中风险后必须 / 禁止的回复动作（必须就医、禁止继续等）。",
-    },
-    {
-        "key": "max_daily_dose",
-        "name_zh": "剂量上限规则",
-        "desc": "单药每日最大 mg 剂量（mcg/mg/g 自动换算）。",
-    },
-    {
-        "key": "patient_state",
-        "name_zh": "患者状态规则",
-        "desc": "药物 + 患者指标组合的禁忌 / 慎用条件（DSL: "
-                "conditions / range）。",
-    },
-    {
-        "key": "drug_drug",
-        "name_zh": "药物相互作用规则",
-        "desc": "同一份 resulting_drugs 中两个药物联用的风险。",
-    },
-    {
-        "key": "drug_food",
-        "name_zh": "药物与食物规则",
-        "desc": "特定药物 + 食物概念（同食禁忌、剂量放大等）。",
-    },
-    {
-        "key": "drug_exercise",
-        "name_zh": "药物与运动规则",
-        "desc": "特定药物 + 运动强度的风险（剧烈运动、低血糖等）。",
-    },
-    {
-        "key": "disease_food",
-        "name_zh": "疾病与食物规则",
-        "desc": "疾病背景 + 推荐食物方向（避免嘌呤、避免反式脂肪）。",
-    },
-    {
-        "key": "disease_exercise",
-        "name_zh": "疾病与运动规则",
-        "desc": "疾病背景 + 推荐运动强度（急性痛风期禁止剧烈运动）。",
-    },
+    {"key": "patient_risk", "name_zh": "患者风险规则",
+     "desc": "基于患者字段（如 eGFR、血压）触发风险标志，驱动 response_compliance。"},
+    {"key": "response_compliance", "name_zh": "回复合规规则",
+     "desc": "命中风险后必须 / 禁止的回复动作。"},
+    {"key": "max_daily_dose", "name_zh": "剂量上限规则",
+     "desc": "单药每日最大 mg 剂量（mcg/mg/g 自动换算）。"},
+    {"key": "patient_state", "name_zh": "患者状态规则",
+     "desc": "药物 + 患者指标组合的禁忌 / 慎用条件。"},
+    {"key": "drug_drug", "name_zh": "药物相互作用规则",
+     "desc": "同一 resulting_drugs 中两个药物联用的风险。"},
+    {"key": "drug_food", "name_zh": "药物与食物规则",
+     "desc": "特定药物 + 食物概念的风险。"},
+    {"key": "drug_exercise", "name_zh": "药物与运动规则",
+     "desc": "特定药物 + 运动强度的风险。"},
+    {"key": "disease_food", "name_zh": "疾病与食物规则",
+     "desc": "疾病背景 + 推荐食物方向。"},
+    {"key": "disease_exercise", "name_zh": "疾病与运动规则",
+     "desc": "疾病背景 + 推荐运动强度。"},
 ]
 
 
@@ -959,12 +205,9 @@ def _rule_type_catalog() -> List[Dict[str, Any]]:
         counts[rule.type]["total"] += 1
         if rule.status == "active":
             counts[rule.type]["active"] += 1
-    out = []
-    for rt in _RULE_TYPE_CATALOG:
-        c = counts.get(rt["key"], {"active": 0, "total": 0})
-        out.append({**rt, "active_count": c["active"],
-                    "total_count": c["total"]})
-    return out
+    return [{**rt, "active_count": counts.get(rt["key"], {"active": 0, "total": 0})["active"],
+             "total_count": counts.get(rt["key"], {"active": 0, "total": 0})["total"]}
+            for rt in _RULE_TYPE_CATALOG]
 
 
 # ---------------------------------------------------------------------------
@@ -977,10 +220,21 @@ def _read_body(handler: SimpleHTTPRequestHandler) -> bytes:
     return handler.rfile.read(length) if length else b""
 
 
+# Fields that the /api/audit endpoint MUST accept (audit input only).
+# Anything else from the request body is silently ignored to keep the
+# front-end from accidentally leaking test metadata into the engine.
+_ALLOWED_AUDIT_FIELDS = {"schema_version", "patient_state",
+                         "dialogue_output", "strict_mode",
+                         "compat_mode", "debug", "simulate_error"}
+
+
+def _extract_strict_payload(data: Dict[str, Any]) -> Dict[str, Any]:
+    """Pick only the audit-input fields from the request body."""
+    return {k: v for k, v in data.items() if k in _ALLOWED_AUDIT_FIELDS}
+
+
 class AuditWebHandler(SimpleHTTPRequestHandler):
     server_version = "AuditWeb/4.2.1"
-
-    # ----- helpers
 
     def _send_json(self, payload: Any, status: int = 200) -> None:
         body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
@@ -1005,8 +259,6 @@ class AuditWebHandler(SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(data)
 
-    # ----- GET
-
     def do_GET(self) -> None:  # noqa: N802 (stdlib API)
         path = self.path.split("?", 1)[0]
         if path in ("/", "/index.html"):
@@ -1028,17 +280,13 @@ class AuditWebHandler(SimpleHTTPRequestHandler):
                 "ruleset": eng.repository.ruleset_version,
                 "project_version": eng.PROJECT_VERSION,
                 "input_schema_version": "1.0",
+                "scenarios_file": str(SCENARIOS_FILE),
             })
             return
         if path == "/api/rule-types":
-            # Expose the rule-type catalog so the dashboard can render
-            # the bottom panel without re-implementing the listing.
             self._send_json({"rule_types": _rule_type_catalog()})
             return
-        # Fallback: 404
         self.send_error(HTTPStatus.NOT_FOUND, f"no route for {path}")
-
-    # ----- POST
 
     def do_POST(self) -> None:  # noqa: N802 (stdlib API)
         path = self.path.split("?", 1)[0]
@@ -1052,24 +300,23 @@ class AuditWebHandler(SimpleHTTPRequestHandler):
             self._send_json({"error": f"bad json: {exc}"}, status=400)
             return
 
-        # v4.2.1: build the canonical payload envelope. ``schema_version``
-        # is filled only when not provided, to preserve the historical
-        # demo behavior. Strict mode is the default.
-        schema_version = str(data.get("schema_version", "") or "")
+        # Hard isolation: any test-only key (expected_assertions,
+        # expected_decision, case_profile, retrieved_evidence,
+        # category, tags) MUST NOT pass through to the engine.
+        strict = _extract_strict_payload(data)
+        schema_version = str(strict.get("schema_version", "") or "")
         if not schema_version:
             schema_version = "1.0"
         payload = {
             "schema_version": schema_version,
-            "patient_state": data.get("patient_state") or {},
-            "dialogue_output": data.get("dialogue_output") or {},
+            "patient_state": strict.get("patient_state") or {},
+            "dialogue_output": strict.get("dialogue_output") or {},
         }
-        strict_mode = bool(data.get("strict_mode", True))
-        compat_mode = bool(data.get("compat_mode", False))
-        debug = bool(data.get("debug", True))
+        strict_mode = bool(strict.get("strict_mode", True))
+        compat_mode = bool(strict.get("compat_mode", False))
+        debug = bool(strict.get("debug", True))
 
-        # Special "K" scenario: client can opt into a simulated engine
-        # exception by sending ``{"simulate_error": true}``.
-        if data.get("simulate_error"):
+        if strict.get("simulate_error"):
             from safety.safety_engine import DialogueSafetyEngine as _DSE
             class _Boom(_DSE):
                 def _audit_impl(self, *a, **kw):
@@ -1090,18 +337,16 @@ class AuditWebHandler(SimpleHTTPRequestHandler):
                 "traceback": traceback.format_exc(),
             }, status=500)
             return
-        payload_out = {
+        self._send_json({
             "decision": report.decision,
             "patient_visible_response": report.patient_visible_response,
             "original_llm_reply_was_sent": report.original_llm_reply_was_sent,
             "audit_report": report.to_dict(),
             "ui_trace": (report.developer_diagnostics or {}).get("ui_trace"),
-            "project_version": report.developer_diagnostics.get("project_version")
-            if report.developer_diagnostics else None,
+            "project_version": (report.developer_diagnostics or {}).get("project_version"),
             "ruleset_version": report.ruleset_version,
             "input_schema_version": report.input_schema_version,
-        }
-        self._send_json(payload_out)
+        })
 
 
 def main(argv: List[str] | None = None) -> int:
@@ -1120,6 +365,7 @@ def main(argv: List[str] | None = None) -> int:
     print(f"[audit_web] serving on http://127.0.0.1:{args.port}/")
     print(f"[audit_web] web assets: {WEB_DIR}")
     print(f"[audit_web] ruleset:    {_get_engine().repository.ruleset_version}")
+    print(f"[audit_web] scenarios:  {SCENARIOS_FILE}")
     print("[audit_web] press Ctrl+C to stop.")
 
     if not args.no_browser:
