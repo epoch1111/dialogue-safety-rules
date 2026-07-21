@@ -37,6 +37,9 @@
     badgeBackend:    $("badge-backend"),
     scenarioSelect:  $("scenario-select"),
     scenarioSummary: $("scenario-summary"),
+    clinicalCasePanel: $("clinical-case-panel"),
+    caseProfileCards: $("case-profile-cards"),
+    caseEvidenceCards: $("case-evidence-cards"),
     strictToggle:    $("strict-toggle"),
     compatToggle:    $("compat-toggle"),
     simulateToggle:  $("simulate-toggle"),
@@ -208,9 +211,47 @@
     els.patientTa.value = pretty(s.patient_state || {});
     els.dialogueTa.value = pretty(s.dialogue_output || {});
     setText(els.scenarioSummary, s.summary || s.title || "");
+    renderClinicalCase(s);
     renderPatientState(s.patient_state || {});
     renderDialogueOutput(s.dialogue_output || {});
   });
+
+  function renderClinicalCase(scenario) {
+    const profile = scenario.case_profile;
+    const evidence = scenario.retrieved_evidence;
+    const isClinicalCase = Boolean(profile || evidence);
+    els.clinicalCasePanel.hidden = !isClinicalCase;
+    clearChildren(els.caseProfileCards);
+    clearChildren(els.caseEvidenceCards);
+    if (!isClinicalCase) return;
+
+    const labels = [
+      ["年龄", profile?.age], ["性别", profile?.sex],
+      ["就诊类型", profile?.visit_type], ["主诉", profile?.chief_complaint],
+      ["病史摘要", profile?.history_summary], ["当前情况", profile?.current_condition],
+      ["已知疾病", (profile?.known_conditions || []).join("、") || "—"],
+      ["案例备注", (profile?.case_notes || []).join("；") || "—"],
+    ];
+    labels.forEach(([label, value]) => {
+      els.caseProfileCards.appendChild(el("div", { class: "card" },
+        el("div", { class: "card-label" }, label),
+        el("div", { class: "meta-line" }, String(value ?? "—")),
+      ));
+    });
+    (evidence || []).forEach((item) => {
+      els.caseEvidenceCards.appendChild(el("article", { class: "evidence-card" },
+        el("div", { class: "card-row" },
+          el("span", { class: "card-label" }, item.evidence_id || "—"),
+          el("span", { class: "badge badge-info" }, `score ${item.retrieval_score ?? "—"}`),
+        ),
+        el("div", { class: "evidence-title" }, item.source_title || "—"),
+        el("div", { class: "meta-line" }, item.section || "—"),
+        el("div", { class: "evidence-excerpt" }, item.excerpt || "—"),
+        el("div", { class: "meta-line" },
+          item.is_demo_evidence ? "演示证据" : "非演示证据"),
+      ));
+    });
+  }
 
   els.strictToggle.addEventListener("change", updateBadges);
   els.compatToggle.addEventListener("change", updateBadges);

@@ -254,6 +254,15 @@ To open and automatically audit a preset, use
 
 The UI exposes legacy scenarios A–P plus 15 dashboard scenarios:
 
+It also includes eight **Full Clinical Cases** for end-to-end demonstrations.
+Each case separates display-only `case_profile` / `retrieved_evidence` from
+the strict `patient_state` / `dialogue_output` actually submitted to the
+engine. The evidence panel is explanatory only; it never changes the
+deterministic decision. Complete-case captures are generated at
+`docs/screenshots/full_case_pass.png`,
+`docs/screenshots/full_case_review.png`, and
+`docs/screenshots/full_case_block.png`.
+
 - **A** Legal new-schema input → PASS
 - **B** Metformin + eGFR=24 → BLOCK
 - **C** Metformin + missing eGFR → REVIEW

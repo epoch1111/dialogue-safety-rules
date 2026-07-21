@@ -55,6 +55,8 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any, Dict, List
 
+from audit_web_cases.full_clinical_cases import FULL_CLINICAL_SCENARIOS
+
 
 ROOT = Path(__file__).resolve().parent
 WEB_DIR = ROOT / "audit_web"
@@ -885,6 +887,8 @@ def list_scenarios() -> List[Dict[str, Any]]:
         {"group": "踪迹演示 (Trace)", "items": TRACE_SCENARIOS},
         {"group": "v4.2.1 仪表板场景 1-15",
          "items": DASHBOARD_SCENARIOS},
+        {"group": "完整临床案例（Full Clinical Cases）",
+         "items": FULL_CLINICAL_SCENARIOS},
         {"group": "v4.2.0 / v4.2.1 场景 A-P",
          "items": LEGACY_V42_SCENARIOS},
     ]

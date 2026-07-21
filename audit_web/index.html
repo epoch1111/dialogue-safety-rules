@@ -42,6 +42,18 @@
         <p class="hint" id="scenario-summary">加载场景中…</p>
       </div>
 
+      <section id="clinical-case-panel" class="panel clinical-case-panel" hidden aria-label="完整临床案例背景">
+        <div class="panel-header">
+          <span class="lbl">完整临床案例背景 <code>case_profile</code></span>
+        </div>
+        <div id="case-profile-cards" class="card-list"></div>
+        <div class="panel-header clinical-evidence-header">
+          <span class="lbl">召回知识与证据 <code>retrieved_evidence</code></span>
+        </div>
+        <p class="hint">召回知识用于解释与核对；当前确定性规则判断仍以结构化输入和规则库为准。</p>
+        <div id="case-evidence-cards" class="card-list"></div>
+      </section>
+
       <div class="panel mode-panel">
         <label class="lbl">模式</label>
         <div class="mode-row">

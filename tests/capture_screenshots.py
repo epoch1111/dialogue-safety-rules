@@ -10,6 +10,8 @@ and snaps three PNGs into ``docs/screenshots/``:
 - pass.png  — scenario 1 (legal PASS)
 - review.png — scenario 6 (text-vs-structured conflict → REVIEW)
 - block.png — scenario 2 (metformin + egfr=24 → BLOCK)
+- full_case_pass.png / full_case_review.png / full_case_block.png —
+  complete clinical cases rendered from their real audits.
 """
 
 from __future__ import annotations
@@ -112,6 +114,9 @@ def main() -> int:
             ("v421_dash_01_legal_pass",         "pass.png"),
             ("v421_dash_06_text_struct_conflict", "review.png"),
             ("v421_dash_02_explicit_block",       "block.png"),
+            ("full_case_01_stable_hypertension", "full_case_pass.png"),
+            ("full_case_03_metformin_moderate_ckd", "full_case_review.png"),
+            ("full_case_06_statin_macrolide_grapefruit", "full_case_block.png"),
         ]
         for sid, fname in cases:
             url = f"{base}/?scenario={sid}"
