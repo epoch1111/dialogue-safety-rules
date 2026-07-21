@@ -1,4 +1,4 @@
-"""Trace Demo for v4.1.1.
+"""Trace Demo for v4.2.1.
 
 This script demonstrates the END-TO-END safety flow for two scenarios:
 
@@ -16,6 +16,21 @@ The audit() call only ever receives ``patient_state`` and the
 ``dialogue_output`` dict. NO expected_decision / expected_rule_ids
 is ever passed in: the engine does not accept such arguments. All
 assertions live in the unit test layer.
+
+v4.2.1 changes vs v4.2.0:
+
+- Scenario inputs use the strict v4.2.1 schema:
+  ``drug_id`` + ``drug_name`` for medications,
+  ``food_concept_id`` + ``food_name`` for food,
+  ``activity_concept_id`` + ``activity_name`` for exercise,
+  ``requires_review`` + ``uncertainty_reasons`` declared on the
+  envelope.
+- Scenario B passes ``requires_review=false`` and an empty
+  ``uncertainty_reasons`` list (v4.2.1 forbids PASS without both).
+- Trace output now also shows ``input_schema_version``,
+  ``project_version``, ``ruleset_version``, and the per-channel
+  ``required_context_retrieval_trace`` so operators can prove the
+  precise-index retrieval path.
 """
 
 from __future__ import annotations
@@ -36,12 +51,16 @@ JSON_LOG = LOGS / "trace_demo_output.json"
 
 def _write_log_header(lines: List[str]):
     lines.append("=" * 80)
-    lines.append("v4.1.1 TRACE DEMO OUTPUT")
+    lines.append("v4.2.1 TRACE DEMO OUTPUT")
     lines.append("=" * 80)
     lines.append("")
     lines.append("This file documents the end-to-end audit flow for two scenarios.")
     lines.append("The audit() call receives only patient_state and dialogue_output;")
     lines.append("NO expected_decision or expected_rule_ids is ever passed in.")
+    lines.append("")
+    lines.append("v4.2.1 input contract: drug_id + drug_name (no legacy 'name'/'drug'),")
+    lines.append("food_concept_id + food_name, activity_concept_id + activity_name,")
+    lines.append("schema_version='1.0', strict input validation, fail-closed audit.")
     lines.append("")
 
 
@@ -220,10 +239,54 @@ def _format_one_scenario(
     text_lines.append(f"  original_llm_reply_was_sent = {original_sent}")
     text_lines.append("")
 
+    # 17. v4.2.1: project + schema versions
+    dev = report.developer_diagnostics or {}
+    text_lines.append("【17. v4.2.1 版本信息】")
+    text_lines.append(f"  project_version      = {dev.get('project_version', '')!r}")
+    text_lines.append(f"  ruleset_version      = {report.ruleset_version!r}")
+    text_lines.append(f"  input_schema_version = {report.input_schema_version!r}")
+    text_lines.append("")
+
+    # 18. v4.2.1: required-context retrieval trace
+    text_lines.append("【18. 必要上下文召回 trace】")
+    rc_trace = dev.get("required_context_retrieval_trace") or []
+    if not rc_trace:
+        text_lines.append("  无 (debug=False 时不填充)")
+    else:
+        for entry in rc_trace:
+            text_lines.append(
+                f"  - channel={entry.get('channel')} "
+                f"query={entry.get('query_key')} "
+                f"fields={entry.get('required_fields')} "
+                f"scanned_rule_count={entry.get('scanned_rule_count')}"
+            )
+    text_lines.append("")
+
+    # 19. v4.2.1: decision_basis
+    text_lines.append("【19. decision_basis】")
+    text_lines.append(f"  {list(report.decision_basis)}")
+    text_lines.append("")
+
+    # 20. v4.2.1: missing_context_fields
+    text_lines.append("【20. missing_context_fields】")
+    if not report.missing_context_fields:
+        text_lines.append("  无")
+    else:
+        for m in report.missing_context_fields:
+            text_lines.append(
+                f"  - field_path={m.get('field_path')!r} "
+                f"reason={m.get('reason')!r}"
+            )
+    text_lines.append("")
+
     # Build the JSON payload for this scenario.
+    dev = report.developer_diagnostics or {}
     json_payload = {
         "scenario_id": scenario_id,
         "scenario_title": title,
+        "project_version": dev.get("project_version", ""),
+        "ruleset_version": report.ruleset_version,
+        "input_schema_version": report.input_schema_version,
         "engine_inputs": {
             "patient_state": _scrub_pii(patient_state),
             "dialogue_output": dialogue_output,
@@ -270,6 +333,12 @@ def _format_one_scenario(
             }
             for rc in report.retrieval_trace
         ],
+        "required_context_retrieval_trace": (
+            dev.get("required_context_retrieval_trace") or []
+        ),
+        "missing_context_fields": report.missing_context_fields,
+        "decision_basis": list(report.decision_basis),
+        "input_validation_errors": [v.to_dict() for v in report.input_validation_errors],
         "candidate_rule_ids": list(report.candidate_rule_ids),
         "evaluated_rule_ids": list(report.evaluated_rule_ids),
         "evaluation_trace": [
@@ -332,12 +401,18 @@ def _scrub_pii(state: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def scenario_a() -> tuple:
-    """A: metformin + eGFR 24 -> BLOCK."""
+    """A: metformin + eGFR 24 -> BLOCK.
+
+    v4.2.1: uses the strict v4.2.1 schema (drug_id + drug_name,
+    schema_version="1.0"). The ``continue`` action carries a full
+    dose block including route="oral".
+    """
     patient_state = {
         "patient_id": "TRACE_METFORMIN_EGFR",
         "egfr": 24,
         "current_medications": [
-            {"name": "二甲双胍", "status": "active"},
+            {"drug_id": "metformin", "drug_name": "二甲双胍",
+             "status": "active"},
         ],
     }
     reply_text = "建议继续使用二甲双胍500毫克，每日2次。"
@@ -345,7 +420,8 @@ def scenario_a() -> tuple:
         "reply_text": reply_text,
         "medication_actions": [
             {
-                "drug": "二甲双胍",
+                "drug_id": "metformin",
+                "drug_name": "二甲双胍",
                 "action": "continue",
                 "dose_value": 500,
                 "dose_unit": "mg",
@@ -356,6 +432,8 @@ def scenario_a() -> tuple:
         "food_advice": [],
         "exercise_advice": [],
         "care_actions": [],
+        "requires_review": False,
+        "uncertainty_reasons": [],
     }
     return ("A", "二甲双胍 + eGFR 24, should BLOCK", patient_state,
             reply_text, dialogue_output)
@@ -363,12 +441,19 @@ def scenario_a() -> tuple:
 
 def scenario_b() -> tuple:
     """B: same patient, LLM recommends HOLDING metformin + urgent eval
-    -> PASS / REVIEW."""
+    -> PASS / REVIEW.
+
+    v4.2.1: hold actions must NOT trigger drug-safety required-context
+    rules. The RequiredContextChecker no longer iterates the full rule
+    set; instead it consults only the precise-indexed channels, which
+    produce no entries for ``hold``.
+    """
     patient_state = {
         "patient_id": "TRACE_METFORMIN_SAFE",
         "egfr": 24,
         "current_medications": [
-            {"name": "二甲双胍", "status": "active"},
+            {"drug_id": "metformin", "drug_name": "二甲双胍",
+             "status": "active"},
         ],
     }
     reply_text = (
@@ -379,11 +464,9 @@ def scenario_b() -> tuple:
         "reply_text": reply_text,
         "medication_actions": [
             {
-                "drug": "二甲双胍",
+                "drug_id": "metformin",
+                "drug_name": "二甲双胍",
                 "action": "hold",
-                "dose_value": None,
-                "dose_unit": None,
-                "frequency_per_day": None,
                 "route": "oral",
             },
         ],
@@ -396,6 +479,8 @@ def scenario_b() -> tuple:
                 "action": "recommend",
             },
         ],
+        "requires_review": False,
+        "uncertainty_reasons": [],
     }
     return ("B", "Same patient, but hold metformin -> should NOT fire R002",
             patient_state, reply_text, dialogue_output)

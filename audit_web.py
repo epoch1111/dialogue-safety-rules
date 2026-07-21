@@ -1,4 +1,4 @@
-"""v4.2.0 Audit Web — single-page audit visualizer.
+"""v4.2.1 Audit Web — single-page audit visualizer.
 
 This module starts a tiny stdlib HTTP server on port ``8765`` that:
 
@@ -8,7 +8,7 @@ This module starts a tiny stdlib HTTP server on port ``8765`` that:
 
   * ``GET  /api/scenarios``  — list of preset scenarios the page can
                               load into the editor.
-  * ``POST /api/audit``     — runs ``engine.audit(..., debug=True)``
+  * ``POST /api/audit``     — runs ``engine.audit_payload(...)``
                               and returns the full AuditReport dict
                               plus the decision and the visible
                               patient-facing response.
@@ -24,6 +24,23 @@ Run it with:
 
 Or simply launch ``audit_web.bat`` on Windows, which opens the
 browser to http://127.0.0.1:8765/ automatically.
+
+v4.2.1 scenarios
+----------------
+A: legal new-schema input, no risk → PASS
+B: metformin + eGFR 24 → BLOCK
+C: metformin + missing eGFR → REVIEW (MISSING_CONTEXT)
+D: current_medications contains a string → REVIEW
+E: unknown drug name "辛伐他烨" → REVIEW
+F: drug_id ↔ drug_name mismatch → REVIEW
+G: amlodipine 1 g (1000 mg/day > 10) → BLOCK
+H: dose_value = -5 → REVIEW (NEGATIVE_DOSE)
+I: replace with atorvastatin not in active regimen → REVIEW
+J: text says "avoid grapefruit" but structured food says "recommend"
+   → REVIEW (SYS003)
+K: simulate engine exception via ``simulate_error=true`` → REVIEW,
+   SYSTEM_ERROR
+L: requires_review=true → REVIEW (LLM_DECLARED_UNCERTAINTY)
 """
 
 from __future__ import annotations
@@ -390,6 +407,104 @@ LEGACY_V42_SCENARIOS: List[Dict[str, Any]] = [
             "care_actions": [], "requires_review": False, "uncertainty_reasons": [],
         },
     },
+    {
+        "id": "v42_L_requires_review",
+        "title": "L. requires_review=true → REVIEW",
+        "summary": "LLM 自报 requires_review=true → REVIEW (LLM_DECLARED_UNCERTAINTY)。",
+        "patient_state": {"patient_id": "P_L", "current_medications": [],
+                          "disease_codes": []},
+        "reply_text": "",
+        "dialogue_output": {
+            "reply_text": "",
+            "medication_actions": [], "food_advice": [], "exercise_advice": [],
+            "care_actions": [],
+            "requires_review": True, "uncertainty_reasons": [],
+        },
+    },
+    {
+        "id": "v42_M_uncertainty_reasons",
+        "title": "M. uncertainty_reasons 非空 → REVIEW",
+        "summary": "LLM 自报 uncertainty_reasons 非空 → REVIEW (LLM_DECLARED_UNCERTAINTY)。",
+        "patient_state": {"patient_id": "P_M", "current_medications": [],
+                          "disease_codes": []},
+        "reply_text": "",
+        "dialogue_output": {
+            "reply_text": "",
+            "medication_actions": [], "food_advice": [], "exercise_advice": [],
+            "care_actions": [],
+            "requires_review": False,
+            "uncertainty_reasons": ["无法确认患者当前用药"],
+        },
+    },
+    {
+        "id": "v42_N_missing_route_start",
+        "title": "N. start 缺少 route → REVIEW",
+        "summary": "v4.2.1 禁止缺失 route → REVIEW (INPUT_MEDICATION_ACTION_MISSING_FIELDS)。",
+        "patient_state": {"patient_id": "P_N", "current_medications": [],
+                          "disease_codes": []},
+        "reply_text": "",
+        "dialogue_output": {
+            "reply_text": "",
+            "medication_actions": [{
+                "drug_id": "amlodipine", "drug_name": "氨氯地平",
+                "action": "start",
+                "dose_value": 5, "dose_unit": "mg",
+                "frequency_per_day": 1,
+            }],
+            "food_advice": [], "exercise_advice": [],
+            "care_actions": [], "requires_review": False,
+            "uncertainty_reasons": [],
+        },
+    },
+    {
+        "id": "v42_O_measurement_unit_error",
+        "title": "O. measurement unit 错误 → REVIEW",
+        "summary": "egfr unit=BANANA + observed_at=not-a-date → REVIEW。",
+        "patient_state": {
+            "patient_id": "P_O", "current_medications": [],
+            "disease_codes": [],
+            "measurements": {
+                "egfr": {
+                    "value": 24, "unit": "BANANA",
+                    "observed_at": "not-a-date",
+                    "source": "madeup", "confirmed": False,
+                }
+            },
+        },
+        "reply_text": "",
+        "dialogue_output": {
+            "reply_text": "",
+            "medication_actions": [], "food_advice": [], "exercise_advice": [],
+            "care_actions": [], "requires_review": False,
+            "uncertainty_reasons": [],
+        },
+    },
+    {
+        "id": "v42_P_hold_metformin_no_egfr",
+        "title": "P. hold 二甲双胍且无 eGFR → REVIEW (但非因 eGFR)",
+        "summary": "hold 动作不触发 continue/patient_state eGFR 规则；只有 unordered_message 才进 REVIEW。",
+        "patient_state": {
+            "patient_id": "P_P",
+            "current_medications": [
+                {"drug_id": "metformin", "drug_name": "二甲双胍",
+                 "status": "active"}],
+            "disease_codes": [],
+        },
+        "reply_text": "建议暂停二甲双胍并尽快就医。",
+        "dialogue_output": {
+            "reply_text": "建议暂停二甲双胍并尽快就医。",
+            "medication_actions": [{
+                "drug_id": "metformin", "drug_name": "二甲双胍",
+                "action": "hold", "route": "oral",
+            }],
+            "food_advice": [], "exercise_advice": [],
+            "care_actions": [
+                {"type": "urgent_medical_evaluation",
+                 "action": "recommend"},
+            ],
+            "requires_review": False, "uncertainty_reasons": [],
+        },
+    },
 ]
 
 
@@ -411,7 +526,7 @@ def _read_body(handler: SimpleHTTPRequestHandler) -> bytes:
 
 
 class AuditWebHandler(SimpleHTTPRequestHandler):
-    server_version = "AuditWeb/4.2.0"
+    server_version = "AuditWeb/4.2.1"
 
     # ----- helpers
 
@@ -458,6 +573,7 @@ class AuditWebHandler(SimpleHTTPRequestHandler):
             self._send_json({
                 "ok": True,
                 "ruleset": _get_engine().repository.ruleset_version,
+                "project_version": _get_engine().PROJECT_VERSION,
             })
             return
         # Fallback: 404
@@ -476,8 +592,22 @@ class AuditWebHandler(SimpleHTTPRequestHandler):
         except (UnicodeDecodeError, json.JSONDecodeError) as exc:
             self._send_json({"error": f"bad json: {exc}"}, status=400)
             return
-        patient_state = data.get("patient_state") or {}
-        dialogue_output = data.get("dialogue_output") or {}
+
+        # v4.2.1: build the canonical payload envelope. ``schema_version``
+        # is filled only when not provided, to preserve the historical
+        # demo behavior. Strict mode is the default.
+        schema_version = str(data.get("schema_version", "") or "")
+        if not schema_version:
+            schema_version = "1.0"
+        payload = {
+            "schema_version": schema_version,
+            "patient_state": data.get("patient_state") or {},
+            "dialogue_output": data.get("dialogue_output") or {},
+        }
+        strict_mode = bool(data.get("strict_mode", True))
+        compat_mode = bool(data.get("compat_mode", False))
+        debug = bool(data.get("debug", True))
+
         # Special "K" scenario: client can opt into a simulated engine
         # exception by sending ``{"simulate_error": true}``.
         if data.get("simulate_error"):
@@ -489,10 +619,11 @@ class AuditWebHandler(SimpleHTTPRequestHandler):
         else:
             eng = _get_engine()
         try:
-            report = eng.audit(
-                patient_state=patient_state,
-                dialogue_output=dialogue_output,
-                debug=True,
+            report = eng.audit_payload(
+                payload=payload,
+                strict_mode=strict_mode,
+                compat_mode=compat_mode,
+                debug=debug,
             )
         except Exception as exc:  # pragma: no cover - server safety net
             self._send_json({

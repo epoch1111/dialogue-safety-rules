@@ -1,6 +1,6 @@
-"""Rule repository for v4.2.0.
+"""Rule repository for v4.2.1.
 
-v4.2.0 changes
+v4.2.1 changes
 --------------
 - **drug_only_rule_index** — a tight index of rules whose evaluation
   depends ONLY on the presence of a drug (no patient field, no
@@ -16,6 +16,23 @@ v4.2.0 changes
   When ``conditions`` is present the legacy fields are ignored.
 - **all/any list semantics** — ``parameters.match_mode = "all"|"any"``
   is explicit whenever the parameter is a list.
+- **Required-context precise indexes (v4.2.1)** — new indexes that let
+  :class:`safety.required_context_checker.RequiredContextChecker` look
+  up ONLY the rules relevant to the current request, never the full
+  rule set:
+
+    * ``_drug_required_field_index[drug]``
+    * ``_drug_action_required_field_index[(drug, action)]``
+    * ``_drug_food_required_field_index[drug]``
+    * ``_drug_exercise_required_field_index[drug]``
+    * ``_disease_food_required_field_index[code]``
+    * ``_disease_exercise_required_field_index[code]``
+    * ``_risk_required_field_index[risk_code]``
+    * ``_care_required_field_index[care_type]``
+
+- **Standard terminology helpers** — ``known_disease_codes``,
+  ``known_food_concepts``, ``known_activity_concepts`` are exposed for
+  the input validator.
 
 The legacy API (``field_rule_ids(...)``, ``drug_pair_rule_ids(...)``,
 etc.) is preserved for v4.1 callers. ``simple_drug_rule_ids`` continues
@@ -168,6 +185,21 @@ class RuleRepository:
         # no food/exercise, no disease, no risk). Almost no production
         # rule qualifies. Reserved for the synthetic stress tests.
         self._drug_only_rule_index: Dict[str, Set[str]] = {}
+
+        # v4.2.1: required-context precise indexes.
+        # For each drug / drug+action / food / exercise / disease /
+        # risk / care, the set of patient fields that any active rule
+        # of the relevant type needs to evaluate. Used by
+        # RequiredContextChecker so it never iterates the full rule
+        # set.
+        self._drug_required_field_index: Dict[str, Set[str]] = {}
+        self._drug_action_required_field_index: Dict[Tuple[str, str], Set[str]] = {}
+        self._drug_food_required_field_index: Dict[str, Set[str]] = {}
+        self._drug_exercise_required_field_index: Dict[str, Set[str]] = {}
+        self._disease_food_required_field_index: Dict[str, Set[str]] = {}
+        self._disease_exercise_required_field_index: Dict[str, Set[str]] = {}
+        self._risk_required_field_index: Dict[str, Set[str]] = {}
+        self._care_required_field_index: Dict[str, Set[str]] = {}
 
         self._pending_rule_ids: Set[str] = set()
 
@@ -528,6 +560,11 @@ class RuleRepository:
                 self._risk_compliance_index.setdefault(risk, set()).add(rule.id)
             for drug in triggers.get("drugs_any", []) or []:
                 self._simple_drug_index.setdefault(drug, set()).add(rule.id)
+            for ct in (rule.parameters.get("required_care_types") or []):
+                self._care_required_field_index.setdefault(ct, set()).add(rule.id)
+
+        # v4.2.1: populate required-context precise indexes.
+        self._index_required_context(rule)
 
     # --------------------------------------------------------------- access
 
@@ -696,6 +733,96 @@ class RuleRepository:
     def _is_evaluable(self, rule_id: str) -> bool:
         return rule_id in self._active_rules_by_id
 
+    # v4.2.1: precise required-context indexing.
+    def _index_required_context(self, rule: Rule) -> None:
+        fields = _rule_required_fields(rule)
+        if not fields:
+            return
+        drugs = _rule_drugs(rule)
+        disease = _rule_disease_code(rule)
+        risk = _rule_risk_code(rule)
+        action = _rule_action(rule)
+        if rule.type in ("patient_state", "patient_condition",
+                         "max_daily_dose", "drug_drug"):
+            for d in drugs:
+                self._drug_required_field_index.setdefault(d, set()).update(fields)
+                if action:
+                    self._drug_action_required_field_index.setdefault(
+                        (d, action), set()).update(fields)
+        elif rule.type == "drug_exercise":
+            # drug_exercise fields are channel-scoped: only required
+            # when the dialogue recommends the matching exercise.
+            for d in drugs:
+                self._drug_exercise_required_field_index.setdefault(d, set()).update(fields)
+        elif rule.type == "drug_food":
+            # drug_food fields are channel-scoped: only required when
+            # the dialogue recommends the matching food.
+            for d in drugs:
+                self._drug_food_required_field_index.setdefault(d, set()).update(fields)
+        elif rule.type == "disease_exercise":
+            if disease:
+                self._disease_exercise_required_field_index.setdefault(
+                    disease, set()).update(fields)
+        elif rule.type == "disease_food":
+            if disease:
+                self._disease_food_required_field_index.setdefault(
+                    disease, set()).update(fields)
+        elif rule.type == "patient_risk":
+            if risk:
+                self._risk_required_field_index.setdefault(risk, set()).update(fields)
+
+    # v4.2.1: accessors for RequiredContextChecker
+    def required_fields_for_drug(self, drug: str) -> Set[str]:
+        return set(self._drug_required_field_index.get(drug, set()))
+
+    def required_fields_for_drug_action(
+        self, drug: str, action: str,
+    ) -> Set[str]:
+        return set(self._drug_action_required_field_index.get((drug, action), set()))
+
+    def required_fields_for_drug_food(self, drug: str) -> Set[str]:
+        return set(self._drug_food_required_field_index.get(drug, set()))
+
+    def required_fields_for_drug_exercise(self, drug: str) -> Set[str]:
+        return set(self._drug_exercise_required_field_index.get(drug, set()))
+
+    def required_fields_for_disease_food(self, code: str) -> Set[str]:
+        return set(self._disease_food_required_field_index.get(code, set()))
+
+    def required_fields_for_disease_exercise(self, code: str) -> Set[str]:
+        return set(self._disease_exercise_required_field_index.get(code, set()))
+
+    def required_fields_for_risk(self, code: str) -> Set[str]:
+        return set(self._risk_required_field_index.get(code, set()))
+
+    def required_fields_for_care(self, care_type: str) -> Set[str]:
+        return set(self._care_required_field_index.get(care_type, set()))
+
+    # v4.2.1: terminology helpers
+    @property
+    def known_disease_codes(self) -> Set[str]:
+        return set(self.aliases.disease_to_codes.keys())
+
+    @property
+    def known_food_concepts(self) -> Set[str]:
+        out: Set[str] = set()
+        for rule in self.iter_active_rules():
+            if rule.type in ("drug_food", "disease_food"):
+                for kw in (rule.parameters.get("keywords") or []):
+                    if isinstance(kw, str):
+                        out.add(kw.strip().lower())
+        return out
+
+    @property
+    def known_activity_concepts(self) -> Set[str]:
+        out: Set[str] = set()
+        for rule in self.iter_active_rules():
+            if rule.type in ("drug_exercise", "disease_exercise"):
+                intensity = rule.parameters.get("exercise_intensity")
+                if isinstance(intensity, str):
+                    out.add(intensity.strip().lower())
+        return out
+
     @staticmethod
     def _load_json(path: Path) -> Dict[str, Any]:
         try:
@@ -735,6 +862,52 @@ def is_field_only_rule(rule: Rule) -> bool:
         params.get("drug") or params.get("drugs") or params.get("drug_a")
     )
     return not has_drug
+
+
+# ----------------------------------------------------------------- v4.2.1
+# Required-context precise indexing
+# -----------------------------------------------------------------
+
+
+def _rule_required_fields(rule: Rule) -> Set[str]:
+    """Return the patient fields a rule needs to evaluate."""
+    fields: Set[str] = set()
+    params = rule.parameters or {}
+    if rule.type in ("patient_state", "patient_condition", "patient_risk",
+                     "drug_exercise", "disease_exercise"):
+        # ``parameters.field`` is the canonical field name.
+        f = params.get("field")
+        if f:
+            fields.add(f)
+        # v4.2.0 range DSL also carries a field name.
+        rng = params.get("range")
+        if isinstance(rng, dict) and rng.get("field"):
+            fields.add(rng["field"])
+    return fields
+
+
+def _rule_drugs(rule: Rule) -> List[str]:
+    params = rule.parameters or {}
+    drugs: List[str] = []
+    if params.get("drug"):
+        drugs.append(params["drug"])
+    for d in params.get("drugs") or []:
+        drugs.append(d)
+    for d in (rule.triggers.get("drugs_any") or []):
+        drugs.append(d)
+    return [d for d in drugs if d]
+
+
+def _rule_disease_code(rule: Rule) -> str:
+    return (rule.parameters or {}).get("disease_code") or ""
+
+
+def _rule_risk_code(rule: Rule) -> str:
+    return (rule.parameters or {}).get("risk_code") or ""
+
+
+def _rule_action(rule: Rule) -> str:
+    return (rule.parameters or {}).get("action") or ""
 
 
 def _normalize_token(value: Any) -> str:

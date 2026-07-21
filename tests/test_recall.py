@@ -329,12 +329,15 @@ class AuditPipelineTests(unittest.TestCase):
             dialogue_output={
                 "reply_text": "",
                 "medication_actions": [
-                    {"drug": "氨氯地平", "action": "start",
-                     "dose_value": 5, "dose_unit": "mg", "frequency_per_day": 1}
+                    {"drug_id": "amlodipine", "drug_name": "氨氯地平",
+                     "action": "start", "dose_value": 5, "dose_unit": "mg",
+                     "frequency_per_day": 1, "route": "oral"}
                 ],
                 "food_advice": [],
                 "exercise_advice": [
-                    {"activity": "快走", "intensity": "moderate", "action": "recommend"}
+                    {"activity_concept_id": "brisk_walking",
+                     "activity_name": "快走",
+                     "intensity": "moderate", "action": "recommend"}
                 ],
                 "care_actions": [],
             },

@@ -1,4 +1,4 @@
-"""v4.2.0 strict input dataclasses.
+"""v4.2.1 strict input dataclasses.
 
 These mirror the JSON Schema files in ``schemas/`` and are used by
 :class:`safety.input_validator.InputValidator`. The dataclasses are
@@ -14,12 +14,19 @@ Design notes
   BLOCK.
 - :class:`StrictAuditInput` is the top-level wrapper. ``schema_version``
   is mandatory and must match one of the values in ``SUPPORTED_SCHEMA_VERSIONS``.
-- :class:`PatientStateInput` accepts both the v4.2 nested shape
-  (``measurements.egfr.value``) and the legacy flat fields the engine
-  still indexes for backward compat. ``to_legacy_patient_state()`` emits
-  the normalized flat dict the existing rules expect.
-- :class:`DialogueOutputInput` mirrors the JSON Schema exactly. All
-  ``*_actions`` lists MUST be present (even when empty).
+- v4.2.1 design rules:
+
+  * ``route``, ``dose_value``, ``dose_unit``, ``frequency_per_day`` are
+    NO LONGER silently defaulted when missing.
+  * ``drug_id`` is NOT auto-derived from ``drug_name``; if the caller
+    only supplied ``drug_name`` the validator must still see a
+    canonical drug_id before downstream code consumes the record.
+  * ``food_concept_id`` and ``activity_concept_id`` are similarly NOT
+    auto-derived from display names.
+  * ``status`` is preserved verbatim — no implicit "active" default.
+  * Legacy fields (``name``, ``drug``, ``food``, ``activity``,
+    ``concept``) are still accepted **only** when the caller opted
+    into compat_mode via :class:`safety.legacy_adapter.LegacyInputAdapter`.
 """
 
 from __future__ import annotations
@@ -49,8 +56,16 @@ VALID_CARE_TYPES = {
 }
 VALID_CARE_ACTIONS = {"recommend", "perform"}
 VALID_CARE_URGENCIES = {"immediate", "same_day", "within_24h", "routine", None}
+
+# Canonical mass units accepted at the schema layer.
 VALID_MASS_UNITS = {"mcg", "mg", "g", "IU", "μg", "ug", "毫克", "克"}
 VALID_ROUTES = {"oral", "iv", "im", "sc", "inhale", "topical", "other"}
+
+# Legacy keys (v4.1) — accepted only via LegacyInputAdapter.
+LEGACY_MEDICATION_FIELDS = ("name", "drug")
+LEGACY_FOOD_FIELDS = ("food",)
+LEGACY_EXERCISE_FIELDS = ("activity",)
+LEGACY_CONCEPT_FIELDS = ("concept",)
 
 
 # ----------------------------------------------------------------- issues
@@ -115,6 +130,10 @@ def _as_list(value: Any) -> Optional[List[Any]]:
     return value if isinstance(value, list) else None
 
 
+def _has_legacy_key(d: Dict[str, Any], names) -> bool:
+    return any(n in d for n in names)
+
+
 # ----------------------------------------------------------------- patient
 
 
@@ -128,6 +147,7 @@ class CurrentMedicationInput:
     frequency_per_day: Optional[float] = None
     route: Optional[str] = None
     raw_was_object: bool = True  # v4.2.0: tracks if the source entry was an object
+    has_legacy_field: bool = False  # v4.2.1
 
     @classmethod
     def from_raw(cls, raw: Any) -> "CurrentMedicationInput":
@@ -138,22 +158,22 @@ class CurrentMedicationInput:
             # them with INPUT_INVALID_MEDICATION_ITEM.
             return cls(drug_id="", drug_name="", status="",
                        raw_was_object=False)
-        # v4.2.0 canonical fields. v4.1 used ``name`` instead of
-        # ``drug_name``; we accept both for backward compatibility.
-        drug_name = (
-            d.get("drug_name")
-            or d.get("name")
-            or ""
-        )
+        # v4.2.1: do NOT silently default route to "oral"; do NOT
+        # silently derive drug_id from drug_name. The validator is
+        # responsible for surfacing both problems.
+        drug_name = str(d.get("drug_name", "") or "")
+        drug_id = str(d.get("drug_id", "") or "")
+        has_legacy = _has_legacy_key(d, LEGACY_MEDICATION_FIELDS)
         return cls(
-            drug_id=str(d.get("drug_id", "") or ""),
-            drug_name=str(drug_name),
+            drug_id=drug_id,
+            drug_name=drug_name,
             status=str(d.get("status", "") or ""),
             dose_value=d.get("dose_value"),
             dose_unit=d.get("dose_unit"),
             frequency_per_day=d.get("frequency_per_day"),
-            route=d.get("route"),
+            route=d.get("route"),  # raw value; validator decides
             raw_was_object=True,
+            has_legacy_field=has_legacy,
         )
 
     def is_structurally_valid(self) -> bool:
@@ -169,6 +189,7 @@ class PatientStateInput:
     clinical_flags: Dict[str, Any] = field(default_factory=dict)
     allergies: List[str] = field(default_factory=list)
     legacy_fields: Dict[str, Any] = field(default_factory=dict)
+    has_legacy_field: bool = False
 
     @classmethod
     def from_raw(cls, raw: Any) -> "PatientStateInput":
@@ -183,9 +204,26 @@ class PatientStateInput:
             if k in {
                 "patient_id", "current_medications", "disease_codes",
                 "measurements", "clinical_flags", "allergies",
+                "schema_version",
             }:
                 continue
             legacy_fields[k] = v
+        # v4.2.1: flag the presence of any legacy field name.
+        legacy_keys_seen = False
+        for med in meds:
+            if med.has_legacy_field:
+                legacy_keys_seen = True
+                break
+        for k in legacy_fields:
+            # detect flat legacy keys like "egfr" — they are still
+            # allowed as a shorthand, but the canonical form is
+            # measurements.egfr.value.
+            if k in {"egfr", "latest_systolic_bp_mmHg",
+                     "latest_glucose_mmol_l", "serum_potassium_mmol_l",
+                     "latest_diastolic_bp_mmHg", "latest_uric_acid_umol_l"}:
+                continue
+            legacy_keys_seen = True
+            break
         return cls(
             patient_id=str(d.get("patient_id", "") or ""),
             current_medications=meds,
@@ -194,13 +232,17 @@ class PatientStateInput:
             clinical_flags=clinical_flags,
             allergies=[str(x) for x in (d.get("allergies") or []) if x],
             legacy_fields=legacy_fields,
+            has_legacy_field=legacy_keys_seen,
         )
 
-    def to_legacy_patient_state(self) -> Dict[str, Any]:
+    def to_engine_patient_state(self) -> Dict[str, Any]:
         """Project into the flat shape the existing rule engine expects.
 
         The legacy fields are also forwarded verbatim so v4.1-style
-        test data keeps working.
+        test data keeps working — but only because the validator has
+        already classified the input as either strict (no legacy
+        fields present) or compat (legacy adapter already converted
+        them).
         """
         out: Dict[str, Any] = {
             "patient_id": self.patient_id,
@@ -256,40 +298,33 @@ class MedicationActionInput:
     dose_value: Optional[float] = None
     dose_unit: Optional[str] = None
     frequency_per_day: Optional[float] = None
-    route: Optional[str] = None
+    route: Optional[str] = None  # NOT default to "oral" in v4.2.1
     duration_days: Optional[int] = None
     use_current_regimen: Optional[bool] = None
     replace_drug_id: Optional[str] = None
     replace_drug_name: Optional[str] = None
+    has_legacy_field: bool = False
 
     @classmethod
     def from_raw(cls, raw: Any) -> "MedicationActionInput":
         d = _as_dict(raw) or {}
-        # v4.2.0 canonical: ``drug_id`` + ``drug_name``.
-        # v4.1 used ``drug`` to denote the display name. We accept
-        # either, preferring ``drug_name`` when present.
-        drug_id = str(d.get("drug_id", "") or "")
-        drug_name = str(d.get("drug_name", "") or d.get("drug", "") or "")
-        if not drug_id and drug_name:
-            # Map drug_name back to drug_id at the input model layer.
-            drug_id = drug_name.strip().lower()
-        # ``route`` was implicit in v4.1 (defaulted to "oral"). v4.2.0
-        # makes it explicit; silently default for backward compat.
-        route = d.get("route")
-        if not route:
-            route = "oral"
+        has_legacy = _has_legacy_key(d, LEGACY_MEDICATION_FIELDS)
+        # v4.2.1: do NOT silently default route to "oral". Validator
+        # surfaces a missing route for start / increase / decrease /
+        # replace.
         return cls(
-            drug_id=drug_id,
-            drug_name=drug_name,
+            drug_id=str(d.get("drug_id", "") or ""),
+            drug_name=str(d.get("drug_name", "") or ""),
             action=str(d.get("action", "") or ""),
             dose_value=d.get("dose_value"),
             dose_unit=d.get("dose_unit"),
             frequency_per_day=d.get("frequency_per_day"),
-            route=route,
+            route=d.get("route"),  # may be None
             duration_days=d.get("duration_days"),
             use_current_regimen=d.get("use_current_regimen"),
             replace_drug_id=d.get("replace_drug_id"),
             replace_drug_name=d.get("replace_drug_name"),
+            has_legacy_field=has_legacy,
         )
 
 
@@ -301,21 +336,20 @@ class FoodAdviceInput:
     amount: Optional[float] = None
     frequency: Optional[str] = None
     instruction: str = ""
+    has_legacy_field: bool = False
 
     @classmethod
     def from_raw(cls, raw: Any) -> "FoodAdviceInput":
         d = _as_dict(raw) or {}
-        food_concept_id = str(d.get("food_concept_id", "") or d.get("concept", "") or "")
-        food_name = str(d.get("food_name", "") or d.get("food", "") or "")
-        if not food_concept_id and food_name:
-            food_concept_id = food_name.strip().lower()
+        has_legacy = _has_legacy_key(d, LEGACY_FOOD_FIELDS) or _has_legacy_key(d, LEGACY_CONCEPT_FIELDS)
         return cls(
-            food_concept_id=food_concept_id,
-            food_name=food_name,
+            food_concept_id=str(d.get("food_concept_id", "") or ""),
+            food_name=str(d.get("food_name", "") or ""),
             action=str(d.get("action", "") or ""),
             amount=d.get("amount"),
             frequency=d.get("frequency"),
             instruction=str(d.get("instruction", "") or ""),
+            has_legacy_field=has_legacy,
         )
 
 
@@ -328,22 +362,21 @@ class ExerciseAdviceInput:
     duration_min: Optional[int] = None
     frequency_per_week: Optional[int] = None
     instruction: str = ""
+    has_legacy_field: bool = False
 
     @classmethod
     def from_raw(cls, raw: Any) -> "ExerciseAdviceInput":
         d = _as_dict(raw) or {}
-        activity_concept_id = str(d.get("activity_concept_id", "") or d.get("concept", "") or "")
-        activity_name = str(d.get("activity_name", "") or d.get("activity", "") or "")
-        if not activity_concept_id and activity_name:
-            activity_concept_id = activity_name.strip().lower()
+        has_legacy = _has_legacy_key(d, LEGACY_EXERCISE_FIELDS) or _has_legacy_key(d, LEGACY_CONCEPT_FIELDS)
         return cls(
-            activity_concept_id=activity_concept_id,
-            activity_name=activity_name,
+            activity_concept_id=str(d.get("activity_concept_id", "") or ""),
+            activity_name=str(d.get("activity_name", "") or ""),
             intensity=str(d.get("intensity", "") or ""),
             action=str(d.get("action", "") or ""),
             duration_min=d.get("duration_min"),
             frequency_per_week=d.get("frequency_per_week"),
             instruction=str(d.get("instruction", "") or ""),
+            has_legacy_field=has_legacy,
         )
 
 
@@ -374,38 +407,48 @@ class DialogueOutputInput:
     care_actions: List[CareActionInput] = field(default_factory=list)
     requires_review: bool = False
     uncertainty_reasons: List[str] = field(default_factory=list)
+    has_legacy_field: bool = False
+    has_requires_review: bool = False
+    has_uncertainty_reasons: bool = False
 
     @classmethod
     def from_raw(cls, raw: Any) -> "DialogueOutputInput":
         d = _as_dict(raw) or {}
+        med_actions = [MedicationActionInput.from_raw(x)
+                       for x in (d.get("medication_actions") or [])]
+        food = [FoodAdviceInput.from_raw(x) for x in (d.get("food_advice") or [])]
+        exercise = [ExerciseAdviceInput.from_raw(x)
+                    for x in (d.get("exercise_advice") or [])]
+        care = [CareActionInput.from_raw(x) for x in (d.get("care_actions") or [])]
+        legacy_seen = any(m.has_legacy_field for m in med_actions) \
+            or any(f.has_legacy_field for f in food) \
+            or any(e.has_legacy_field for e in exercise)
+        has_requires_review = "requires_review" in d
+        has_uncertainty = "uncertainty_reasons" in d
         return cls(
             reply_text=str(d.get("reply_text", "") or ""),
-            medication_actions=[
-                MedicationActionInput.from_raw(x)
-                for x in (d.get("medication_actions") or [])
-            ],
-            food_advice=[
-                FoodAdviceInput.from_raw(x)
-                for x in (d.get("food_advice") or [])
-            ],
-            exercise_advice=[
-                ExerciseAdviceInput.from_raw(x)
-                for x in (d.get("exercise_advice") or [])
-            ],
-            care_actions=[
-                CareActionInput.from_raw(x)
-                for x in (d.get("care_actions") or [])
-            ],
+            medication_actions=med_actions,
+            food_advice=food,
+            exercise_advice=exercise,
+            care_actions=care,
             requires_review=bool(d.get("requires_review", False)),
             uncertainty_reasons=[
                 str(x) for x in (d.get("uncertainty_reasons") or []) if x
             ],
+            has_legacy_field=legacy_seen,
+            has_requires_review=has_requires_review,
+            has_uncertainty_reasons=has_uncertainty,
         )
 
     def to_engine_dialogue_output(self) -> Dict[str, Any]:
         """Project into the v4.1-shaped dict the rule engine already
         consumes (``medication_actions`` with ``drug``/``dose_mg`` keys,
-        ``food_advice`` with ``food``/``concept``, etc.)."""
+        ``food_advice`` with ``food``/``concept``, etc.).
+
+        IMPORTANT: v4.2.1 only projects fields the validator has
+        already validated. We do NOT re-introduce silent defaults
+        here.
+        """
         med_actions = []
         for ma in self.medication_actions:
             med_actions.append({
@@ -415,7 +458,7 @@ class DialogueOutputInput:
                 "dose_value": ma.dose_value,
                 "dose_unit": ma.dose_unit,
                 "frequency_per_day": ma.frequency_per_day,
-                "route": ma.route,
+                "route": ma.route,  # may be None; validator decides
                 "duration_days": ma.duration_days,
                 "use_current_regimen": ma.use_current_regimen,
                 "replace_drug": ma.replace_drug_name or ma.replace_drug_id,
@@ -481,3 +524,6 @@ class StrictAuditInput:
 
     def is_top_level_dict(self) -> bool:
         return self.schema_version != "" or bool(self.patient_state.patient_id)
+
+    def has_any_legacy_field(self) -> bool:
+        return self.patient_state.has_legacy_field or self.dialogue_output.has_legacy_field

@@ -1,4 +1,7 @@
-# Rule Authoring Guide (v4.2.0)
+# Rule Authoring Guide (v4.2.1)
+
+> Rule-set version: `dialogue-safety-rules-4.2.1`. Input schema
+> version: `1.0`.
 
 ## File layout
 

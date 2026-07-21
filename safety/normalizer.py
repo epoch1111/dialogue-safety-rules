@@ -1,12 +1,15 @@
-"""Text + structured-field normalization helpers for the v4.2.0 safety engine.
+"""Text + structured-field normalization helpers for the v4.2.1 safety engine.
 
-v4.2.0 changes
+v4.2.1 changes
 --------------
 - ``normalize_*`` functions no longer fall back to permissive defaults.
   An unknown action stays ``""`` so the input validator and consistency
   checker can flag it.
-- ``normalize_draft`` accepts both the v4.2 strict shape (with
+- ``normalize_draft`` accepts both the v4.2.1 strict shape (with
   ``drug_id``/``drug_name``) and the legacy v4.1 fields (``drug``).
+  However, no implicit defaults are applied: ``route`` is forwarded
+  verbatim (may be ``None``), ``dose_unit`` is forwarded verbatim
+  (may be ``None``).
 - Empty / missing actions become empty strings (not "recommend" /
   "continue") so missing-action bugs surface as REVIEW, not PASS.
 """
@@ -202,11 +205,20 @@ def normalize_draft(data: Any) -> NormalizedDraft:
                 })
 
         dose_value = raw.get("dose_value", raw.get("dose_mg"))
-        dose_unit = raw.get("dose_unit", "mg")
+        # v4.2.1: do NOT default dose_unit to "mg". If missing, leave
+        # it as None so the validator can flag it.
+        dose_unit_raw = raw.get("dose_unit")
+        dose_unit = dose_unit_raw if dose_unit_raw not in (None, "") else None
         dose_mg = raw.get("dose_mg")
         if dose_value is None and dose_mg is not None:
             dose_value = dose_mg
-            dose_unit = dose_unit or "mg"
+            if dose_unit is None:
+                dose_unit = "mg"
+
+        # v4.2.1: route is forwarded verbatim. No implicit "oral"
+        # default — the validator must decide.
+        route_raw = raw.get("route")
+        route_value = route_raw if route_raw not in (None, "") else None
 
         medication_actions.append(
             MedicationAction(
@@ -214,9 +226,9 @@ def normalize_draft(data: Any) -> NormalizedDraft:
                 drug_id=str(raw.get("drug_id", "") or ""),
                 action=action,
                 dose_value=_to_float(dose_value),
-                dose_unit=str(dose_unit) if dose_unit else None,
+                dose_unit=dose_unit,
                 frequency_per_day=_to_float(raw.get("frequency_per_day")),
-                route=str(raw.get("route", "oral") or "oral"),
+                route=route_value,
                 duration_days=_to_int(raw.get("duration_days")),
                 dose_mg=_to_float(dose_mg),
                 replace_drug=(str(raw.get("replace_drug", "") or "").strip() or None),
@@ -332,7 +344,7 @@ def normalize_draft(data: Any) -> NormalizedDraft:
             CareAction(
                 type=ct,
                 target=str(raw.get("target", "") or ""),
-                action=ca or "recommend",
+                action=ca if ca else "",
                 urgency=urgency,
             )
         )

@@ -107,14 +107,16 @@ def _trace_audit_inputs():
             "patient_id": "TRACE_AUDIT_INPUTS",
             "egfr": 24,
             "current_medications": [
-                {"name": "二甲双胍", "status": "active"},
+                {"drug_id": "metformin", "drug_name": "二甲双胍",
+                 "status": "active"},
             ],
         },
         {
             "reply_text": "建议继续使用二甲双胍500毫克，每日2次。",
             "medication_actions": [
                 {
-                    "drug": "二甲双胍",
+                    "drug_id": "metformin",
+                    "drug_name": "二甲双胍",
                     "action": "continue",
                     "dose_value": 500,
                     "dose_unit": "mg",

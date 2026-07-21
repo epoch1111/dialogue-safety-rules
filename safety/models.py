@@ -24,16 +24,19 @@ SEVERITY_RANK = {
 class MedicationAction:
     """Normalized medication action.
 
-    ``dose_mg`` is accepted for backward compatibility and is internally
-    translated into ``dose_value`` + ``dose_unit="mg"`` by the engine.
+    v4.2.1: ``route`` and ``dose_unit`` are now ``Optional[str]`` and
+    default to ``None`` instead of being silently coerced to
+    ``"oral"`` / ``"mg"``. The validator surfaces a missing route for
+    ``start`` / ``increase`` / ``decrease`` / ``replace`` actions as
+    ``INPUT_MEDICATION_ACTION_MISSING_FIELDS``.
     """
 
     drug: str
     action: str  # start|continue|increase|decrease|stop|hold|avoid_start|replace
     dose_value: Optional[float] = None
-    dose_unit: Optional[str] = "mg"
+    dose_unit: Optional[str] = None
     frequency_per_day: Optional[float] = None
-    route: Optional[str] = "oral"
+    route: Optional[str] = None
     duration_days: Optional[int] = None
     dose_mg: Optional[float] = None  # legacy
     raw: Dict[str, Any] = field(default_factory=dict)
@@ -81,7 +84,7 @@ class ExerciseAdvice:
 class CareAction:
     type: str = ""  # repeat_measurement|urgent_medical_evaluation|emergency_symptom_screening|monitor|follow_up
     target: str = ""
-    action: str = "recommend"  # recommend|perform
+    action: str = ""  # v4.2.1: not defaulted; validator decides.
     urgency: Optional[str] = None
 
 

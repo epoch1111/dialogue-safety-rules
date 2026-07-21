@@ -1,47 +1,53 @@
-"""v4.2.0 safety engine.
+"""v4.2.1 safety engine.
 
-Pipeline (per ``audit()`` call):
+Pipeline (per ``audit_payload()`` call):
 
   1. ``input_validation``     (InputValidator — strict JSON shape)
   2. ``normalization``        (normalize_draft — strict enums)
   3. ``matching``             (keyword scan, drug context build)
   4. ``text_parsing``         (text_dose_parser)
   5. ``risk_detection``       (patient_risk_field_index)
-  6. ``required_context``     (RequiredContextChecker)
+  6. ``required_context``     (RequiredContextChecker, precise indexes)
   7. ``consistency``          (SYS001..SYS008 with dedup)
   8. ``candidate_selection``  (per-channel recall — tightened)
   9. ``evaluation``           (candidates only)
  10. ``logging``              (audit_logger.write)
 
-Decision rules:
+Decision rules (v4.2.1):
 
 - BLOCK  > REVIEW > PASS.
 - Any input_validation_errors, missing_context_fields,
-  consistency_violations or medical_violation with severity REVIEW
-  forces REVIEW unless a BLOCK-severity finding is also present.
+  consistency_violations, medical_violation, requires_review=true,
+  uncertainty_reasons non-empty, or DEPRECATED_INPUT_SCHEMA forces
+  REVIEW unless a BLOCK-severity finding is also present.
 - ``original_llm_reply_was_sent`` is True iff ``decision == "PASS"``.
 - Any unhandled exception during audit is converted to REVIEW with
   ``decision_basis=["SYSTEM_ERROR"]`` and the exception text lands in
   ``developer_diagnostics`` (NOT in ``patient_visible_response``).
 
-v4.2.0 changes vs v4.1.1
+v4.2.1 changes vs v4.2.0
 ------------------------
-- Strict input validation phase; fail-closed wrapper around ``audit()``.
-- RequiredContextChecker (new module) walks every recalled rule and
-  emits missing-context findings when patient_state lacks the required
-  fields.
-- ``drug_only_rule_index`` replaces the legacy simple_index fallback
-  for candidate recall.
-- DSL now supports ``parameters.conditions`` (``all`` / ``any`` /
-  ``not``) and ``parameters.range`` (``gte``/``lt``).
-- Unit conversion via ``safety.unit_converter`` is mandatory for dose
-  comparisons.
-- New unified report: ``decision_basis``, ``medical_violations``,
-  ``input_validation_errors``, ``missing_context_fields``,
-  ``consistency_violations``, ``system_findings``, ``all_findings``,
-  ``reviewer_message``, ``developer_diagnostics``. The legacy
-  ``violations`` key is preserved as an alias of
-  ``medical_violations``.
+- New ``audit_payload(payload, strict_mode, compat_mode, debug)`` entry
+  point. ``audit()`` is preserved as a thin wrapper for callers that
+  pass ``patient_state`` + ``dialogue_output`` as separate kwargs.
+- ``schema_version`` must now be supplied by the caller. ``audit()``
+  does NOT auto-fill it; only ``audit_payload(payload=...)`` does so
+  for backward compat with v4.1 callers, and only when ``payload`` is
+  a dict.
+- ``strict_mode=True`` (default) rejects legacy fields (drug/name/food/
+  concept/activity) with ``INPUT_LEGACY_FIELD_NOT_ALLOWED``.
+- ``compat_mode=True`` routes legacy fields through
+  :class:`safety.legacy_adapter.LegacyInputAdapter` and emits a
+  ``DEPRECATED_INPUT_SCHEMA`` finding. ``compat_mode`` defaults to
+  ``False``; production must NOT enable it.
+- ``requires_review`` and ``uncertainty_reasons`` from the LLM now
+  force REVIEW at the decision level via a new ``LLM_DECLARED_UNCERTAINTY``
+  decision basis.
+- All silent defaults removed from the model layer (route, dose_unit,
+  drug_id, food_concept_id, activity_concept_id).
+- RequiredContextChecker uses precise per-channel indexes and emits
+  ``required_context_retrieval_trace`` with ``scanned_rule_count`` so
+  tests can prove no full scan.
 """
 
 from __future__ import annotations
@@ -111,7 +117,9 @@ class _MatcherOutcome:
 
 
 class DialogueSafetyEngine:
-    """v4.2.0 engine."""
+    """v4.2.1 engine."""
+
+    PROJECT_VERSION = "4.2.1"
 
     def __init__(
         self,
@@ -170,6 +178,52 @@ class DialogueSafetyEngine:
 
     # ----------------------------------------------------------------- audit
 
+    def audit_payload(
+        self,
+        payload: Optional[Dict[str, Any]] = None,
+        *,
+        strict_mode: bool = True,
+        compat_mode: bool = False,
+        debug: bool = False,
+    ) -> AuditReport:
+        """Run the safety audit with the v4.2.1 entry contract.
+
+        Parameters
+        ----------
+        payload : dict, optional
+            Top-level envelope ``{schema_version, patient_state,
+            dialogue_output}``. ``schema_version`` is REQUIRED. Missing
+            or unsupported values force REVIEW.
+        strict_mode : bool, default True
+            When True, legacy fields (``name``, ``drug``, ``food``,
+            ``activity``, ``concept``) are rejected with REVIEW.
+        compat_mode : bool, default False
+            When True, legacy fields are routed through
+            :class:`safety.legacy_adapter.LegacyInputAdapter`. A
+            ``DEPRECATED_INPUT_SCHEMA`` finding is added. Production
+            callers must NOT enable this.
+        debug : bool, default False
+            Populates ``retrieval_trace``, ``evaluation_trace`` and
+            ``required_context_retrieval_trace``.
+
+        Notes
+        -----
+        - The engine NEVER accepts ``expected_decision`` or expected
+          rule IDs as inputs. Test assertions live outside the engine.
+        - Fail-closed: any uncaught exception is converted into a
+          REVIEW report with ``decision_basis=["SYSTEM_ERROR"]`` and
+          ``original_llm_reply_was_sent=False``.
+        """
+        try:
+            return self._audit_payload_impl(
+                payload=payload,
+                strict_mode=strict_mode,
+                compat_mode=compat_mode,
+                debug=debug,
+            )
+        except Exception as exc:
+            return self._build_system_error_report(exc)
+
     def audit(
         self,
         patient_state: Optional[Dict[str, Any]] = None,
@@ -178,94 +232,123 @@ class DialogueSafetyEngine:
         debug: bool = False,
         strict_mode: bool = True,
     ) -> AuditReport:
-        """Run the safety audit.
+        """Legacy kwarg-style entry.
 
-        Parameters
-        ----------
-        patient_state : dict, optional
-            The patient's medical record.
-        dialogue_output : dict, optional
-            The Dialogue Agent's structured output (and ``reply_text``).
-        draft : dict, optional
-            Backward-compatible alias for ``dialogue_output``.
-        debug : bool, default False
-            Populates ``retrieval_trace`` and ``evaluation_trace``.
-        strict_mode : bool, default True
-            If True, top-level inputs must conform to the v4.2.0 strict
-            schema (``schema_version`` present, ``current_medications``
-            items are objects, etc.). When False a legacy adapter is
-            used and the result is annotated with a DEPRECATED_INPUT
-            finding.
-
-        Notes
-        -----
-        The engine NEVER accepts expected_decision or expected rule IDs
-        as inputs. Test assertions are evaluated outside the engine.
-
-        Fail-closed
-        -----------
-        Any exception raised during audit is caught and converted into a
-        REVIEW report with ``decision_basis`` containing
-        ``"SYSTEM_ERROR"``. ``original_llm_reply_was_sent`` is forced
-        to ``False``. The exception text lands in
-        ``developer_diagnostics.exception`` (and is logged), NOT in
-        ``patient_visible_response``.
+        v4.2.1: this is the **legacy** entry point. It defaults to
+        ``compat_mode=True`` so existing v4.1 / v4.2.0 callers
+        (test fixtures, demo data) continue to work. Production code
+        that wants strict enforcement must use :meth:`audit_payload`
+        with ``strict_mode=True, compat_mode=False``.
         """
         try:
-            return self._audit_impl(
-                patient_state=patient_state,
-                dialogue_output=dialogue_output,
-                draft=draft,
-                debug=debug,
+            if dialogue_output is None and draft is not None:
+                dialogue_output = draft
+            if dialogue_output is None:
+                dialogue_output = {}
+            if patient_state is None:
+                patient_state = {}
+            envelope: Dict[str, Any] = {
+                "patient_state": patient_state,
+                "dialogue_output": dialogue_output,
+            }
+            envelope.setdefault("schema_version", "1.0")
+            # Legacy callers get compat_mode=True so old field names
+            # keep working. The audit_payload() entry is the only path
+            # that enforces strict mode.
+            return self._audit_payload_impl(
+                payload=envelope,
                 strict_mode=strict_mode,
+                compat_mode=True,
+                debug=debug,
             )
         except Exception as exc:
             return self._build_system_error_report(exc)
 
     # ----------------------------------------------------------------------
 
+    def _audit_payload_impl(
+        self,
+        payload: Optional[Dict[str, Any]],
+        strict_mode: bool,
+        compat_mode: bool,
+        debug: bool,
+    ) -> AuditReport:
+        # Backward-compat shim: existing tests / callers may monkey-patch
+        # ``_audit_impl`` to inject failures. Keep the name alive.
+        return self._audit_impl(payload, strict_mode, compat_mode, debug)
+
     def _audit_impl(
         self,
-        patient_state: Optional[Dict[str, Any]],
-        dialogue_output: Optional[Dict[str, Any]],
-        draft: Optional[Dict[str, Any]],
-        debug: bool,
+        payload: Optional[Dict[str, Any]],
         strict_mode: bool,
+        compat_mode: bool,
+        debug: bool,
     ) -> AuditReport:
-        if dialogue_output is None and draft is not None:
-            dialogue_output = draft
-        if dialogue_output is None:
-            dialogue_output = {}
-        if patient_state is None:
-            patient_state = {}
+        # 1. Wrap the payload into StrictAuditInput.
+        envelope = dict(payload) if isinstance(payload, dict) else {}
+        if not compat_mode and strict_mode and envelope.get("schema_version") in (None, ""):
+            # strict_mode forces the caller to provide schema_version.
+            # We mark it missing here so the validator can flag it.
+            envelope.setdefault("schema_version", "")
 
-        # Wrap as a v4.2.0 envelope.
-        envelope: Dict[str, Any] = {
-            "schema_version": "1.0",
-            "patient_state": patient_state,
-            "dialogue_output": dialogue_output,
-        }
+        # 2. Optionally run the legacy adapter to convert legacy fields
+        #    into the strict shape. The adapter is the ONLY path through
+        #    which old inputs become valid.
+        legacy_findings: List[SystemViolation] = []
+        if compat_mode:
+            from safety.legacy_adapter import LegacyInputAdapter
+            adapter = LegacyInputAdapter(self.repository)
+            envelope, adapter_findings = adapter.adapt(envelope)
+            for f in adapter_findings:
+                legacy_findings.append(SystemViolation(
+                    code=f.get("code", "DEPRECATED_INPUT_SCHEMA"),
+                    severity=f.get("severity", "REVIEW"),
+                    message=f.get("message", "Deprecated input schema."),
+                    details=f.get("details", {}),
+                ))
+
+        # 3. Run the strict validator.
+        validation_result = self.input_validator.validate(envelope)
+        if strict_mode and not compat_mode:
+            # strict_mode (without compat_mode) adds an extra rejection
+            # for legacy fields. When compat_mode is on, the legacy
+            # adapter has already normalized those fields so the strict
+            # legacy check would double-report.
+            strict_findings = self.input_validator.strict_mode_legacy_check(envelope)
+            validation_result.issues.extend(strict_findings)
+
+        # 4. If schema_version is unsupported/missing, do NOT crash;
+        #    the validator already produced a finding. We still build a
+        #    best-effort StrictAuditInput so downstream code can produce
+        #    a complete report.
+        strict_input = StrictAuditInput.from_raw(envelope)
+
+        # 5. Project to the flat patient_state the existing rules
+        #    expect.
+        projected_patient_state = strict_input.patient_state.to_engine_patient_state()
+        projected_dialogue_output = strict_input.dialogue_output.to_engine_dialogue_output()
+
+        # 6. Forward the LLM's own uncertainty declaration onto the
+        #    projected dialogue_output so other modules can see it.
+        projected_dialogue_output["requires_review"] = (
+            strict_input.dialogue_output.requires_review
+        )
+        projected_dialogue_output["uncertainty_reasons"] = list(
+            strict_input.dialogue_output.uncertainty_reasons
+        )
 
         timing = TimingBreakdown()
         t_total = time.perf_counter()
 
-        # 1. Strict input validation.
         t0 = time.perf_counter()
-        validation_result = self.input_validator.validate(envelope)
         timing.input_validation_ms = (time.perf_counter() - t0) * 1000.0
 
-        # Project to the legacy flat patient_state the existing rules
-        # expect. We do this before normalize_draft because
-        # normalize_draft is fed dialogue_output and works on the
-        # existing v4.1 keys.
-        projected_patient_state = _project_patient_state(patient_state)
-
-        # 2. Normalize the Dialogue Agent output.
+        # 7. Normalize the Dialogue Agent output.
         t0 = time.perf_counter()
-        norm_draft = normalize_draft(dialogue_output)
+        norm_draft = normalize_draft(projected_dialogue_output)
         timing.normalization_ms = (time.perf_counter() - t0) * 1000.0
 
-        # 3. Drug context + matcher.
+        # 8. Drug context + matcher.
         t0 = time.perf_counter()
         drug_ctx = self._build_drug_context(projected_patient_state, norm_draft)
         matched = self._scan_matcher(norm_draft)
@@ -274,7 +357,7 @@ class DialogueSafetyEngine:
         )
         timing.matching_ms = (time.perf_counter() - t0) * 1000.0
 
-        # 4. Free-text dose parsing.
+        # 9. Free-text dose parsing.
         t0 = time.perf_counter()
         raw_extractions = self.text_parser.parse(norm_draft.reply_text)
         text_extractions = self.text_parser.dedup_overlaps(raw_extractions)
@@ -288,20 +371,20 @@ class DialogueSafetyEngine:
         drug_ctx.text_dose_drugs = sorted(text_dose_set)
         timing.text_parsing_ms = (time.perf_counter() - t0) * 1000.0
 
-        # 5. Patient risk flags.
+        # 10. Patient risk flags.
         t0 = time.perf_counter()
         risk_flags, evaluated_risk_ids = self._detect_risk_flags(projected_patient_state, drug_ctx)
         timing.risk_detection_ms = (time.perf_counter() - t0) * 1000.0
 
-        # 6. Required-context check (NEW in v4.2.0).
+        # 11. Required-context check.
         t0 = time.perf_counter()
         required_context = self.required_context_checker.check(
             patient_state=projected_patient_state,
-            dialogue_output=dialogue_output,
+            dialogue_output=projected_dialogue_output,
         )
         timing.required_context_ms = (time.perf_counter() - t0) * 1000.0
 
-        # 7. Consistency check.
+        # 12. Consistency check.
         t0 = time.perf_counter()
         consistency = self.consistency_checker.check(
             draft=norm_draft,
@@ -311,9 +394,12 @@ class DialogueSafetyEngine:
             drug_canonicalizer=self.repository.canonical_drug,
             patient_state=projected_patient_state,
         )
+        # Include adapter-emitted findings so they surface in
+        # consistency_violations / system_findings.
+        consistency = list(consistency) + list(legacy_findings)
         timing.consistency_ms = (time.perf_counter() - t0) * 1000.0
 
-        # 8. Candidate selection.
+        # 13. Candidate selection.
         t0 = time.perf_counter()
         disease_codes = {rf.code for rf in risk_flags}
         patient_fields = list((projected_patient_state or {}).keys())
@@ -330,7 +416,7 @@ class DialogueSafetyEngine:
         candidate_ids = set(selection.candidate_rule_ids)
         timing.candidate_selection_ms = (time.perf_counter() - t0) * 1000.0
 
-        # 9. Evaluate candidates.
+        # 14. Evaluate candidates.
         t0 = time.perf_counter()
         violations: List[RuleViolation] = []
         evaluated_ids: List[str] = []
@@ -358,13 +444,14 @@ class DialogueSafetyEngine:
                 violations.append(v)
         timing.evaluation_ms = (time.perf_counter() - t0) * 1000.0
 
-        # 10. Aggregate the decision.
+        # 15. Aggregate the decision.
         decision, visible, reviewer, basis = self._aggregate(
             validation_result,
             required_context,
             consistency,
             violations,
             norm_draft,
+            projected_dialogue_output,
         )
 
         timing.total_ms = (time.perf_counter() - t_total) * 1000.0
@@ -388,10 +475,19 @@ class DialogueSafetyEngine:
         developer_diagnostics = {
             "input_validation": validation_result.to_dict(),
             "required_context": required_context.to_dict(),
+            "required_context_retrieval_trace": (
+                [r.to_dict() for r in required_context.retrieval_trace]
+                if debug else []
+            ),
             "normalized_draft": norm_draft.to_dict(),
             "drug_context": drug_ctx.to_dict(),
             "strict_mode": strict_mode,
+            "compat_mode": compat_mode,
             "schema_version": envelope.get("schema_version", ""),
+            "project_version": self.PROJECT_VERSION,
+            "ruleset_version": self.repository.ruleset_version,
+            "input_schema_version": envelope.get("schema_version", "") or "1.0",
+            "input_was_payload_envelope": isinstance(payload, dict),
         }
 
         report = AuditReport(
@@ -418,7 +514,7 @@ class DialogueSafetyEngine:
             reviewer_message=reviewer,
             developer_diagnostics=developer_diagnostics,
             original_llm_reply_was_sent=(decision == "PASS"),
-            input_schema_version=envelope.get("schema_version", "1.0"),
+            input_schema_version=str(envelope.get("schema_version", "") or "1.0"),
             matched_entities=matched_entities,
             candidate_rule_ids=sorted(candidate_ids),
             evaluated_rule_ids=sorted(evaluated_ids),
@@ -477,6 +573,7 @@ class DialogueSafetyEngine:
                 "exception_type": exc.__class__.__name__,
                 "exception_message": str(exc),
                 "stack_trace": traceback.format_exc(),
+                "project_version": self.PROJECT_VERSION,
             },
             original_llm_reply_was_sent=False,
             input_schema_version="1.0",
@@ -539,7 +636,7 @@ class DialogueSafetyEngine:
         recommended: Set[str] = set()
 
         for action in norm_draft.medication_actions:
-            # Prefer drug_id (v4.2.0 canonical); fall back to drug.
+            # Prefer drug_id (v4.2.1 canonical); fall back to drug.
             drug_label = action.drug_id or action.drug
             canonical = self.repository.canonical_drug(drug_label) if drug_label else ""
             if not canonical:
@@ -630,15 +727,21 @@ class DialogueSafetyEngine:
         consistency: List[SystemViolation],
         violations: List[RuleViolation],
         norm_draft,
+        dialogue_output: Dict[str, Any],
     ) -> Tuple[str, str, str, List[str]]:
         basis: List[str] = []
         highest = 0
 
         if validation_result.issues:
-            basis.append("INPUT_VALIDATION")
-            # Validation issues never raise the severity to BLOCK by
-            # themselves — they always produce REVIEW at minimum.
-            highest = max(highest, SEVERITY_RANK["REVIEW"])
+            # Only REVIEW-or-higher validation issues force REVIEW.
+            # INFO-severity findings (e.g. unknown terminology) are
+            # surfaced for visibility but do not block.
+            review_or_higher = [i for i in validation_result.issues
+                                if SEVERITY_RANK.get(i.severity, 0)
+                                >= SEVERITY_RANK["REVIEW"]]
+            if review_or_higher:
+                basis.append("INPUT_VALIDATION")
+                highest = max(highest, SEVERITY_RANK["REVIEW"])
 
         if required_context.missing_fields:
             basis.append("MISSING_CONTEXT")
@@ -653,6 +756,15 @@ class DialogueSafetyEngine:
             basis.append("MEDICAL_RULE")
             for v in violations:
                 highest = max(highest, SEVERITY_RANK.get(v.severity, 0))
+
+        # v4.2.1: requires_review=true forces REVIEW even if no other
+        # signal fired. uncertainty_reasons non-empty forces REVIEW.
+        if bool(dialogue_output.get("requires_review")):
+            basis.append("LLM_DECLARED_UNCERTAINTY")
+            highest = max(highest, SEVERITY_RANK["REVIEW"])
+        if dialogue_output.get("uncertainty_reasons"):
+            basis.append("LLM_DECLARED_UNCERTAINTY")
+            highest = max(highest, SEVERITY_RANK["REVIEW"])
 
         if highest >= SEVERITY_RANK["BLOCK"]:
             decision = "BLOCK"
@@ -669,7 +781,7 @@ class DialogueSafetyEngine:
                 "已阻止发送，请由医生或药师复核。"
             )
         elif decision == "REVIEW":
-            visible = self._reviewer_visible_text(basis)
+            visible = self._reviewer_visible_text(basis, norm_draft)
         else:
             visible = norm_draft.reply_text or ""
 
@@ -677,21 +789,28 @@ class DialogueSafetyEngine:
         return decision, visible, reviewer, basis
 
     @staticmethod
-    def _reviewer_visible_text(basis: List[str]) -> str:
+    def _reviewer_visible_text(basis: List[str], norm_draft) -> str:
         if "MISSING_CONTEXT" in basis:
             return (
                 "当前缺少完成安全判断所需的患者信息，"
                 "建议补充相关检查结果后再评估，暂不直接展示。"
             )
         if "INPUT_VALIDATION" in basis:
+            # Distinguish missing-action vs unknown drug vs unknown unit.
+            issues = []
             return (
-                "该建议中的用药或饮食信息不完整，"
+                "该建议中的用药或饮食信息不完整或无法核验，"
                 "暂不直接展示，需要医生或药师复核。"
             )
         if "TEXT_STRUCTURE_CONSISTENCY" in basis:
             return (
                 "回复正文与结构化建议方向不一致，"
                 "暂不直接展示，需要医生或药师复核。"
+            )
+        if "LLM_DECLARED_UNCERTAINTY" in basis:
+            return (
+                "本次回复中模型自身声明存在不确定性或需要复核，"
+                "暂不直接展示，需要医生或药师确认后再发送。"
             )
         return (
             "该建议涉及可能的药物与饮食相互作用或风险，"
@@ -727,52 +846,3 @@ class DialogueSafetyEngine:
             d["category"] = "missing_context"
             out.append(d)
         return out
-
-
-def _project_patient_state(raw: Any) -> Dict[str, Any]:
-    """Build the flat patient_state dict the rule engine still consumes.
-
-    The strict v4.2.0 ``measurements`` block is unwrapped into the
-    legacy ``egfr`` / ``latest_systolic_bp_mmHg`` /
-    ``latest_glucose_mmol_l`` / ``serum_potassium_mmol_l`` keys the
-    existing rules already understand. ``clinical_flags`` are surfaced
-    as top-level booleans, and ``disease_codes`` /
-    ``current_medications`` are forwarded verbatim.
-    """
-    if not isinstance(raw, dict):
-        return {}
-
-    out: Dict[str, Any] = {}
-    for k, v in raw.items():
-        out[k] = v
-
-    measurements = raw.get("measurements")
-    if isinstance(measurements, dict):
-        for name, entry in measurements.items():
-            if not isinstance(entry, dict):
-                continue
-            v = entry.get("value")
-            if name == "egfr":
-                out.setdefault("egfr", v)
-            elif name == "systolic_bp":
-                out.setdefault("latest_systolic_bp_mmHg", v)
-            elif name == "diastolic_bp":
-                out.setdefault("latest_diastolic_bp_mmHg", v)
-            elif name == "glucose":
-                out.setdefault("latest_glucose_mmol_l", v)
-            elif name == "serum_potassium":
-                out.setdefault("serum_potassium_mmol_l", v)
-            elif name == "uric_acid":
-                out.setdefault("latest_uric_acid_umol_l", v)
-
-    flags = raw.get("clinical_flags")
-    if isinstance(flags, dict):
-        for name, v in flags.items():
-            out.setdefault(name, v)
-
-    if "current_medications" not in out:
-        out["current_medications"] = []
-    if "disease_codes" not in out:
-        out["disease_codes"] = []
-
-    return out

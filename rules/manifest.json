@@ -1,5 +1,5 @@
 {
-  "ruleset_version": "dialogue-safety-rules-4.2.0",
+  "ruleset_version": "dialogue-safety-rules-4.2.1",
   "schema_version": 4,
   "input_schema_version": "1.0",
   "decision_policy": {
